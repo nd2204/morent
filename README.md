@@ -1,6 +1,6 @@
 # MORENT
 
-An ASPNet Core based ecommerce website for browsing musical instrument
+A Full-stack cars rental application
 
 ## 📸 Screenshots
 
