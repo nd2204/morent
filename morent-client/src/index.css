@@ -1,1 +1,344 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+@layer utilities {
+
+  /* Text styles */
+  /* Regular */
+  .text-sm-regular {
+    font-size: 14px; 
+    font-weight: lighter;
+  }
+  .text-xs-regular {
+    font-size: 12px; 
+    font-weight: lighter;
+  }
+  .text-base-regular {
+    font-size: 16px; 
+    font-weight: lighter;
+  }
+  .text-1lg-regular {
+    font-size: 18px; 
+    font-weight: lighter;
+  }
+  .text-2lg-regular {
+    font-size: 20px; 
+    font-weight: lighter;
+  }
+  .text-0xl-regular {
+    font-size: 24px; 
+    font-weight: lighter;
+  }
+  .text-1xl-regular {
+    font-size: 32px; 
+    font-weight: lighter;
+  }
+  .text-2xl-regular {
+    font-size: 36px; 
+    font-weight: lighter;
+  }
+  .text-3xl-regular {
+    font-size: 40px; 
+    font-weight: lighter;
+  }
+  .text-4xl-regular {
+    font-size: 72px; 
+    font-weight: lighter;
+  }
+  /* Medium */
+  .text-sm-medium {
+    font-size: 14px; 
+    font-weight: normal;
+  }
+  .text-xs-medium {
+    font-size: 12px; 
+    font-weight: normal;
+  }
+  .text-base-medium {
+    font-size: 16px; 
+    font-weight: normal;
+  }
+  .text-1lg-medium {
+    font-size: 18px; 
+    font-weight: normal;
+  }
+  .text-2lg-medium {
+    font-size: 20px; 
+    font-weight: normal;
+  }
+  .text-0xl-medium {
+    font-size: 24px; 
+    font-weight: normal;
+  }
+  .text-1xl-medium {
+    font-size: 32px; 
+    font-weight: normal;
+  }
+  .text-2xl-medium {
+    font-size: 36px; 
+    font-weight: normal;
+  }
+  .text-3xl-medium {
+    font-size: 40px; 
+    font-weight: normal;
+  }
+  .text-4xl-medium {
+    font-size: 72px; 
+    font-weight: normal;
+  }
+  /* Semi Bold */
+  .text-sm-semibold {
+    font-size: 14px; 
+    font-weight: Bold;
+  }
+  .text-xs-semibold {
+    font-size: 12px; 
+    font-weight: Bold;
+  }
+  .text-base-semibold {
+    font-size: 16px; 
+    font-weight: Bold;
+  }
+  .text-1lg-semibold {
+    font-size: 18px; 
+    font-weight: Bold;
+  }
+  .text-2lg-semibold {
+    font-size: 20px; 
+    font-weight: Bold;
+  }
+  .text-0xl-semibold {
+    font-size: 24px; 
+    font-weight: Bold;
+  }
+  .text-1xl-semibold {
+    font-size: 32px; 
+    font-weight: Bold;
+  }
+  .text-2xl-semibold {
+    font-size: 36px; 
+    font-weight: Bold;
+  }
+  .text-3xl-semibold {
+    font-size: 40px; 
+    font-weight: Bold;
+  }
+  .text-4xl-semibold {
+    font-size: 72px; 
+    font-weight: Bold; 
+  }
+  /* Bold */
+  .text-sm-bold {
+    font-size: 14px; 
+    font-weight: Bolder;
+  }
+  .text-xs-bold {
+    font-size: 12px; 
+    font-weight: Bolder;
+  }
+  .text-base-bold {
+    font-size: 16px; 
+    font-weight: Bolder;
+  }
+  .text-1lg-bold {
+    font-size: 18px; 
+    font-weight: Bolder;
+  }
+  .text-2lg-bold {
+    font-size: 20px; 
+    font-weight: Bolder;
+  }
+  .text-0xl-bold {
+    font-size: 24px; 
+    font-weight: Bolder;
+  }
+  .text-1xl-bold {
+    font-size: 32px; 
+    font-weight: Bolder;
+  }
+  .text-2xl-bold {
+    font-size: 36px; 
+    font-weight: Bolder;
+  }
+  .text-3xl-bold {
+    font-size: 40px; 
+    font-weight: Bolder;
+  }
+  .text-4xl-bold {
+    font-size: 72px;
+    font-weight: Bolder; 
+  }
+  
+  /* Colors */
+  /* Primary Neutral Pallete */
+  .color-primary-800 {
+    color: #102587;
+  }
+  .color-primary-900 {
+    color: #0A196F;
+  }
+  .color-primary-700 {
+    color: #1A37A7;
+  }
+  .color-primary-600 {
+    color: #264BC8;
+  }
+  .color-primary-500 {
+    color: #3563E9;
+  }
+  .color-primary-400 {
+    color: #658DF1;
+  }
+  .color-primary-300 {
+    color: #85A8F8;
+  }
+  .color-primary-200 {
+    color: #AEC8FC;
+  }
+  .color-primary-100 {
+    color: #D6E4FD;
+  }
+  .color-primary-0 {
+    color: #FFFFFF;
+  }
+  /* Success */
+  .color-success-800 {
+    color: #4C7A0B;
+  }
+  .color-success-900 {
+    color: #3B6506;
+  }
+  .color-success-700 {
+    color: #659711;
+  }
+  .color-success-600 {
+    color: #7FB519;
+  }
+  .color-success-500 {
+    color: #9CD323;
+  }
+  .color-success-400 {
+    color: #BCE455;
+  }
+  .color-success-300 {
+    color: #D3F178;
+  }
+  .color-success-200 {
+    color: #E8FAA6;
+  }
+  .color-success-100 {
+    color: #F5FCD2;
+  }
+  /* Error */
+  .color-error-800 {
+    color: #930B16;
+  }
+  .color-error-900 {
+    color: #7A0619;
+  }
+  .color-error-700 {
+    color: #B71112;
+  }
+  .color-error-600 {
+    color: #DB2719;
+  }
+  .color-error-500 {
+    color: #FF4423;
+  }
+  .color-error-400 {
+    color: #FF7F59;
+  }
+  .color-error-300 {
+    color: #FFA37A;
+  }
+  .color-error-200 {
+    color: #FFC8A6;
+  }
+  .color-error-100 {
+    color: #FFE7D3;
+  }
+  /* Warning */
+  .color-warning-800 {
+    color: #936312;
+  }
+  .color-warning-900 {
+    color: #7A4D0B;
+  }
+  .color-warning-700 {
+    color: #B7821D;
+  }
+  .color-warning-600 {
+    color: #DBA32A;
+  }
+  .color-warning-500 {
+    color: #FFC73A;
+  }
+  .color-warning-400 {
+    color: #FFD96B;
+  }
+  .color-warning-300 {
+    color: #FFE488;
+  }
+  .color-warning-200 {
+    color: #FFEFB0;
+  }
+  .color-warning-100 {
+    color: #FFF8D7;
+  }
+  /* Infomation */
+  .color-info-800 {
+    color: #1A4393;
+  }
+  .color-info-900 {
+    color: #102E7A;
+  }
+  .color-info-700 {
+    color: #2A60B7;
+  }
+  .color-info-600 {
+    color: #3D81DB;
+  }
+  .color-info-500 {
+    color: #54A6FF;
+  }
+  .color-info-400 {
+    color: #7EC2FF;
+  }
+  .color-info-300 {
+    color: #98D3FF;
+  }
+  .color-info-200 {
+    color: #BAE5FF;
+  }
+  .color-info-100 {
+    color: #DCF3FF;
+  }
+  /* Secondary */
+  .color-secondary-800 {
+    color: #080D19;
+  }
+  .color-secondary-900 {
+    color: #040815;
+  }
+  .color-secondary-700 {
+    color: #0D121F;
+  }
+  .color-secondary-600 {
+    color: #131825;
+  }
+  .color-secondary-500 {
+    color: #1A202C;
+  }
+  .color-secondary-400 {
+    color: #596780;
+  }
+  .color-secondary-300 {
+    color: #90A3BF;
+  }
+  .color-secondary-200 {
+    color: #C3D4E9;
+  }
+  .color-secondary-100 {
+    color: #E0E9F4;
+  }
+}
+  
