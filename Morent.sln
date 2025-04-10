@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morent.Api", "Morent.Api\Morent.Api.csproj", "{8FFDBAEE-596A-4DF1-BBE7-3582EDA97169}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morent.Core", "Morent.Core\Morent.Core.csproj", "{8DD3F715-DE78-4C23-BF6B-1B78B63F8C07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morent.Infra", "Morent.Infra\Morent.Infra.csproj", "{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8FFDBAEE-596A-4DF1-BBE7-3582EDA97169}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FFDBAEE-596A-4DF1-BBE7-3582EDA97169}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FFDBAEE-596A-4DF1-BBE7-3582EDA97169}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FFDBAEE-596A-4DF1-BBE7-3582EDA97169}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DD3F715-DE78-4C23-BF6B-1B78B63F8C07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DD3F715-DE78-4C23-BF6B-1B78B63F8C07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DD3F715-DE78-4C23-BF6B-1B78B63F8C07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DD3F715-DE78-4C23-BF6B-1B78B63F8C07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
