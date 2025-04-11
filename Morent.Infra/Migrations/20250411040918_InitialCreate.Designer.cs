@@ -11,8 +11,8 @@ using Morent.Infra.Data.Persistence;
 namespace Morent.Infra.Migrations
 {
     [DbContext(typeof(MorentDbContext))]
-    [Migration("20250410090714_Init")]
-    partial class Init
+    [Migration("20250411040918_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -236,8 +236,8 @@ namespace Morent.Infra.Migrations
 
             modelBuilder.Entity("Morent.Core.Entities.MorentFavorite", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CarId")
                         .HasColumnType("INTEGER");
@@ -272,11 +272,14 @@ namespace Morent.Infra.Migrations
                     b.Property<int?>("UserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CarModelId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Images");
                 });
@@ -356,8 +359,8 @@ namespace Morent.Infra.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -423,20 +426,23 @@ namespace Morent.Infra.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("UserId1")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CarId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("Morent.Core.Entities.MorentUser", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -516,7 +522,7 @@ namespace Morent.Infra.Migrations
 
                     b.HasOne("Morent.Core.Entities.MorentUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("CarModel");
 
@@ -590,7 +596,7 @@ namespace Morent.Infra.Migrations
 
                     b.HasOne("Morent.Core.Entities.MorentUser", "User")
                         .WithMany("Reviews")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

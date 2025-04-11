@@ -8,9 +8,12 @@ namespace Morent.Infra.Data.Configurations;
 
 public class MorentCarModelConfiguration : IEntityTypeConfiguration<MorentCarModel>
 {
-  private static int i = 1;
   public void Configure(EntityTypeBuilder<MorentCarModel> builder)
   {
+    int i = 1;
+    builder.Property(c => c.Id)
+        .ValueGeneratedOnAdd();
+
     builder.HasData(
       new MorentCarModel
       {

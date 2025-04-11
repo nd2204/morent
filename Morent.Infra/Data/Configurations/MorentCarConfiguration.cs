@@ -10,6 +10,10 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
   {
     // Car relationships
 
+    // Auto increment
+    builder.Property(c => c.Id)
+        .ValueGeneratedOnAdd();
+
     builder.HasOne(c => c.CarModel)
         .WithMany(m => m.Cars)
         .HasForeignKey(c => c.CarModelId)

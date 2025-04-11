@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Morent.Infra.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -47,8 +47,7 @@ namespace Morent.Infra.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
@@ -121,7 +120,8 @@ namespace Morent.Infra.Migrations
                     Url = table.Column<string>(type: "TEXT", nullable: false),
                     UploadedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CarModelId = table.Column<int>(type: "INTEGER", nullable: true),
-                    UserId = table.Column<int>(type: "INTEGER", nullable: true)
+                    UserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    UserId1 = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -132,8 +132,8 @@ namespace Morent.Infra.Migrations
                         principalTable: "CarModels",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Images_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Images_Users_UserId1",
+                        column: x => x.UserId1,
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
@@ -142,7 +142,7 @@ namespace Morent.Infra.Migrations
                 name: "Favorites",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     CarId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -169,7 +169,7 @@ namespace Morent.Infra.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     RentalStatus = table.Column<string>(type: "TEXT", nullable: false),
-                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     CarId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -196,6 +196,7 @@ namespace Morent.Infra.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    UserId1 = table.Column<Guid>(type: "TEXT", nullable: false),
                     CarId = table.Column<int>(type: "INTEGER", nullable: false),
                     Rating = table.Column<decimal>(type: "TEXT", nullable: false),
                     Comment = table.Column<string>(type: "TEXT", nullable: false),
@@ -211,8 +212,8 @@ namespace Morent.Infra.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Reviews_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Reviews_Users_UserId1",
+                        column: x => x.UserId1,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -331,9 +332,9 @@ namespace Morent.Infra.Migrations
                 column: "CarModelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Images_UserId",
+                name: "IX_Images_UserId1",
                 table: "Images",
-                column: "UserId");
+                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_RentalId",
@@ -373,9 +374,9 @@ namespace Morent.Infra.Migrations
                 column: "CarId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_UserId",
+                name: "IX_Reviews_UserId1",
                 table: "Reviews",
-                column: "UserId");
+                column: "UserId1");
         }
 
         /// <inheritdoc />

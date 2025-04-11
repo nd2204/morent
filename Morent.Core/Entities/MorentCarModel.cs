@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Morent.Core.Entities;
 
 public class MorentCarModel
@@ -12,8 +14,9 @@ public class MorentCarModel
   public decimal PricePerDay { get; set; }
 
   public int CarTypeId { get; set; }
+  [ForeignKey(nameof(CarTypeId))]
   public MorentCarType CarType { get; set; } = null!;
 
-  public ICollection<MorentImage> Image { get; set; } = null!;
+  public ICollection<MorentImage> Image { get; set; } = new List<MorentImage>();
   public ICollection<MorentCar> Cars { get; set; } = new List<MorentCar>();
 }

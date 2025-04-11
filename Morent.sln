@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morent.Core", "Morent.Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Morent.Infra", "Morent.Infra\Morent.Infra.csproj", "{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scripts", "Scripts\Scripts.csproj", "{409BC24C-D704-4AAE-BAA8-FCE9B9DF34CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDCBE3AA-CCC0-4B20-B9F4-7540F85E96F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{409BC24C-D704-4AAE-BAA8-FCE9B9DF34CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{409BC24C-D704-4AAE-BAA8-FCE9B9DF34CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{409BC24C-D704-4AAE-BAA8-FCE9B9DF34CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{409BC24C-D704-4AAE-BAA8-FCE9B9DF34CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
