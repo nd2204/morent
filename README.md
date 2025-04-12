@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <i>An Fullstack car rental application</i>
+  <i>A Modern Car Rental Application Built with Clean Architecture</i>
 </p>
 
 <p align="center">
@@ -12,47 +12,101 @@
   <img src="https://img.shields.io/github/commit-activity/w/nd2204/morent?style=for-the-badge" />
 </p>
 
-## 📸 Screenshots
+## 🏗 Architecture Overview
 
-- TODO: Include screenshots to showcase website's UI.
+This project follows Clean Architecture principles with a clear separation of concerns:
 
-## 🛠️ Technologies Used
+```bash
+Morent/
+├── morent-server/                # Backend solution
+│   ├── Morent.Core/              # Enterprise/Domain layer
+│   ├── Morent.Application/       # Application layer
+│   ├── Morent.Infrastructure/    # Infrastructure layer
+│   └── Morent.WebApi/            # Web API layer
+├── morent-client/                # React frontend
+│   ├── src/
+│   │   ├── components/           # React components
+│   │   ├── features/             # Feature modules
+│   │   └── types/                # TypeScript definitions
+│   └── public/                   # Static assets
+```
 
-- Frontend: React, HTML, CSS, JavaScript,
-- Backend: ASPNET Core (C#), Docker
-- Database: SQLServer
+## 🛠 Technology Stack
 
-## 📦 Installation
+### Backend (.NET 9)
+- **Framework**: ASP.NET Core Web API
+- **Architecture**: Clean Architecture with CQRS
+- **ORM**: Entity Framework Core
+- **Database**: 
+  - Development: SQLite
+  - Production: SQL Server
+- **Authentication**: JWT Bearer tokens
 
-Clone the repository:
+### Frontend (React 18)
+- **Framework**: React with TypeScript
+- **State Management**: React Query & Context API
+- **Styling**: TailwindCSS
+- **API Client**: Axios
 
-```sh
+### Development Tools
+- **Version Control**: Git
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker
+- **API Documentation**: Swagger/OpenAPI
+
+## 🚀 Getting Started
+
+1. **Clone the Repository**
+```bash
 git clone https://github.com/nd2204/morent.git
 cd morent
 ```
 
-Start the development server:
-
-```sh
-dotnet run --launch-profile https --project Morent.Api
-# TODO: Add frontend startup script here
+2. **Set Up the Database**
+```bash
+# Apply migrations
+./migrate.sh
 ```
 
-Or start the production server:
+3. **Start the Backend**
+```bash
+cd morent-server/Morent.WebApi
+dotnet run
+```
 
-```sh
+4. **Start the Frontend**
+```bash
+cd morent-client
+npm install
+npm run dev
+```
+
+## 📦 Development Database
+
+The development environment uses SQLite for simplicity:
+
+- **Database File**: `Morent.WebApi/Morent.db`
+- **Connection String**: `"Data Source=Morent.db"`
+- **Migration Commands**:
+```bash
+# Add new migration
+dotnet ef migrations add "MigrationName" --project morent-server/Morent.Infrastructure --startup-project morent-server/Morent.WebApi
+
+# Update database
+dotnet ef database update --project morent-server/Morent.Infrastructure --startup-project morent-server/Morent.WebApi
+```
+
+## 🐳 Production Setup
+
+For production, we use SQL Server in Docker:
+
+```bash
+# Start SQL Server container
 docker-compose up -d
-dotnet run --launch-profile https-production --project Morent.Api
-# TODO: Add frontend startup script here
+
+# Apply migrations to production database
+dotnet ef database update --connection "Server=localhost;Database=MorentDb;User=sa;Password=morentdbpassword;TrustServerCertificate=True"
 ```
-
-## 📜 Usage
-
-- TODO: Explain how users can interact with the website, including key features and navigation instructions.
-
-## 🏗️ Deployment
-
-- No deployment method at the moment
 
 ## 👥 Contributing
 
