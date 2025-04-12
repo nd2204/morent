@@ -1,0 +1,7 @@
+@Host = http://localhost
+@Port = 5154
+
+GET {{Host}}:{{Port}}/api/cars
+Accept: application/json
+
+###
