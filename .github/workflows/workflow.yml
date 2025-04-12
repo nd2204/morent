@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-backend:
+  build-and-test-backend:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -22,8 +22,9 @@ jobs:
       run: dotnet restore
     - name: Build Backend
       run: dotnet build --no-restore
-#    - name: Test
-#      run: dotnet test --no-build --verbosity normal
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
   build-frontend:
     runs-on: ubuntu-latest
     defaults:
