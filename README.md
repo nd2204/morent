@@ -16,19 +16,28 @@
 
 This project follows Clean Architecture principles with a clear separation of concerns:
 
-```bash
+```
 Morent/
 ├── morent-server/                # Backend solution
-│   ├── Morent.Core/              # Enterprise/Domain layer
-│   ├── Morent.Application/       # Application layer
-│   ├── Morent.Infrastructure/    # Infrastructure layer
-│   └── Morent.WebApi/            # Web API layer
-├── morent-client/                # React frontend
-│   ├── src/
-│   │   ├── components/           # React components
-│   │   ├── features/             # Feature modules
-│   │   └── types/                # TypeScript definitions
-│   └── public/                   # Static assets
+│   ├── Morent.Core/             # Enterprise/Domain layer
+│   │   └── Entities/            # Domain entities
+│   ├── Morent.Application/      # Application layer
+│   │   ├── Common/             # Shared components
+│   │   ├── Features/           # Use cases
+│   │   └── Interfaces/         # Port definitions
+│   ├── Morent.Infrastructure/   # Infrastructure layer
+│   │   ├── Data/              # Database implementation
+│   │   │   ├── Configs/       # Entity configurations
+│   │   │   └── Migrations/    # Database migrations
+│   │   └── Services/          # External service implementations
+│   └── Morent.WebApi/          # Web API layer
+│       └── Controllers/        # API endpoints
+└── morent-client/              # React frontend
+    ├── src/
+    │   ├── components/        # React components
+    │   ├── features/         # Feature modules
+    │   └── types/           # TypeScript definitions
+    └── public/              # Static assets
 ```
 
 ## 🛠 Technology Stack
@@ -57,24 +66,28 @@ Morent/
 ## 🚀 Getting Started
 
 1. **Clone the Repository**
+
 ```bash
 git clone https://github.com/nd2204/morent.git
 cd morent
 ```
 
 2. **Set Up the Database**
+
 ```bash
 # Apply migrations
 ./migrate.sh
 ```
 
 3. **Start the Backend**
+
 ```bash
 cd morent-server/Morent.WebApi
 dotnet run
 ```
 
 4. **Start the Frontend**
+
 ```bash
 cd morent-client
 npm install
@@ -88,25 +101,18 @@ The development environment uses SQLite for simplicity:
 - **Database File**: `Morent.WebApi/Morent.db`
 - **Connection String**: `"Data Source=Morent.db"`
 - **Migration Commands**:
+
 ```bash
 # Add new migration
 dotnet ef migrations add "MigrationName" --project morent-server/Morent.Infrastructure --startup-project morent-server/Morent.WebApi
 
 # Update database
-dotnet ef database update --project morent-server/Morent.Infrastructure --startup-project morent-server/Morent.WebApi
+dotnet ef database update --project morent-server/Morent.Infrastructure --startup-project morent
 ```
 
-## 🐳 Production Setup
+## Repo
 
-For production, we use SQL Server in Docker:
-
-```bash
-# Start SQL Server container
-docker-compose up -d
-
-# Apply migrations to production database
-dotnet ef database update --connection "Server=localhost;Database=MorentDb;User=sa;Password=morentdbpassword;TrustServerCertificate=True"
-```
+![Morent Repo](https://repobeats.axiom.co/api/embed/0ab87f4aa83a4c4fc9ef278050025fd3c3e39339.svg "Repobeats analytics image")
 
 ## 👥 Contributing
 

@@ -18,7 +18,9 @@ public static class ServiceConfig
     logger.LogInformation("Registering WebApi services");
 
     services
+      .AddAuthorization()
       .AddInfrastructureServices(logger, builder.Configuration)
+      .AddMediatrConfigs()
       .AddJwtConfigs(builder.Configuration)
       .AddCors(options =>
       {

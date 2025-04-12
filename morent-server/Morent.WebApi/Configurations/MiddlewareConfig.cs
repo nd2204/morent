@@ -12,12 +12,16 @@ public static class MiddlewareConfig
 
     if (app.Environment.IsDevelopment())
     {
+      app.Use(async (context, next) =>
+      {
+        if (context.Request.Path == "/")
+        {
+          context.Response.Redirect("/scalar");
+          return;
+        }
+        await next();
+      });
       app.MapScalarApiReference();
-    }
-    else
-    {
-      app.UseHsts();
-      app.UseHttpsRedirection();
     }
 
     app.UseAuthorization();
