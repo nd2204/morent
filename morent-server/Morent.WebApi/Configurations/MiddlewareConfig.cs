@@ -5,11 +5,8 @@ namespace Morent.WebApi.Configurations;
 
 public static class MiddlewareConfig 
 {
-  public static IApplicationBuilder
-  UseMiddleware(this WebApplication app)
+  public static IApplicationBuilder UseMiddleware(this WebApplication app)
   {
-    app.UseAuthentication();
-
     if (app.Environment.IsDevelopment())
     {
       app.Use(async (context, next) =>
@@ -21,11 +18,19 @@ public static class MiddlewareConfig
         }
         await next();
       });
+      app.MapOpenApi();
       app.MapScalarApiReference();
     }
 
-    app.UseAuthorization();
+    app.UseHttpsRedirection();
+    app.UseHsts();
+    app.MapControllers();
     app.UseCors("AllowReactApp");
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.Logger.LogInformation("{Project} registered", "WebApi Middlewares");
 
     return app;
   }

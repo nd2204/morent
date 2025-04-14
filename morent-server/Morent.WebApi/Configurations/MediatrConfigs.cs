@@ -1,7 +1,3 @@
-using Morent.Application.Features.CarModels.Create;
-using Morent.Core.Entities;
-using System.Reflection;
-
 namespace Morent.WebApi.Configurations;
 
 public static class MediatrConfigs
@@ -10,8 +6,8 @@ public static class MediatrConfigs
   {
     var mediatRAssemblies = new[]
       {
-        Assembly.GetAssembly(typeof(MorentCarModel)), // Core
-        Assembly.GetAssembly(typeof(CreateCarModelCommand)) // Application
+        Core.AssemblyReference.Assembly, // Core
+        Application.AssemblyReference.Assembly  // Application
       };
 
     services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies!));

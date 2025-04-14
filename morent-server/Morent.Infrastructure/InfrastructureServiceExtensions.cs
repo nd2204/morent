@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Morent.Infrastructure.Data;
 
 namespace Morent.Infrastructure;
@@ -12,7 +13,12 @@ public static class InfrastructureServiceExtensions
   {
     services.AddMorentDbContext(configuration);
 
-    logger.LogInformation("{Project} services registered", "Infrastructure");
+    services
+      .AddScoped(typeof(IRepository<>), typeof(EFRepository<>))
+      .AddScoped(typeof(IReadRepository<>), typeof(EFRepository<>))
+    ;
+
+    logger.LogInformation("{Project} registered", "Infrastructure services");
     return services;
   }
 }
