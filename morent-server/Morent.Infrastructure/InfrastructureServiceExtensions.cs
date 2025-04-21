@@ -1,5 +1,8 @@
 using Ardalis.GuardClauses;
+using Morent.Application.Interfaces;
+using Morent.Core.Interfaces;
 using Morent.Infrastructure.Data;
+using Morent.Infrastructure.Services;
 
 namespace Morent.Infrastructure;
 
@@ -16,6 +19,7 @@ public static class InfrastructureServiceExtensions
     services
       .AddScoped(typeof(IRepository<>), typeof(EFRepository<>))
       .AddScoped(typeof(IReadRepository<>), typeof(EFRepository<>))
+      .AddScoped<IAuthService, AuthService>()
     ;
 
     logger.LogInformation("{Project} registered", "Infrastructure services");

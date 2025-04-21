@@ -4,7 +4,7 @@ using Morent.Core.MorentUserAggregate;
 
 namespace Morent.Application.Features.Users.Commands.Create;
 
-public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<CreatedUserDto>>
+public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<UserDto>>
 {
   private readonly IRepository<MorentUser> repository_;
   private readonly IUserService service_;
@@ -15,7 +15,7 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<Creat
     service_ = service;
   }
 
-  public async Task<Result<CreatedUserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+  public async Task<Result<UserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
   {
     var validator = new CreateUserValidation(repository_);
     var validationResult = await validator.ValidateAsync(request);
@@ -25,12 +25,13 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<Creat
     }
 
     var result = await service_.CreateUserAsync(request.username, request.password, request.email);
+
     if (!result.IsSuccess) {
-      return Result.Error();
+      return Result.Error("");
     }
 
     var value = result.Value;
-    return new CreatedUserDto { Id = value.Id.ToString(), Name = value.Name, Role = value.Role };
+    return new UserDto { Id = value.Id.ToString(), Name = value.Name };
   }
 }
  

@@ -1,23 +1,25 @@
+using Morent.Application.Models;
 using Morent.Core.Interfaces;
+using Morent.Core.MorentUserAggregate;
 using Morent.Core.MorentUserAggregate.Specifications;
 
-namespace Morent.Core.Services;
+namespace Morent.Application.Services;
 
 public class UserService : IUserService
 {
   private readonly IRepository<MorentUser> repository_;
-  private readonly ISecurityService securityService_;
 
-  public UserService(IRepository<MorentUser> repository, ISecurityService securityService) {
+  public UserService(IRepository<MorentUser> repository) {
     repository_ = repository;
-    securityService_ = securityService;
   }
 
-  public async Task<Result<MorentUser>> CreateUserAsync(string username, string email, string password)
+  public async Task<Result<MorentUser>> CreateUserAsync(
+    string username, string email, string passwordHash, byte[] salt)
   {
     Guard.Against.NullOrEmpty(username);
     Guard.Against.NullOrEmpty(email);
-    Guard.Against.NullOrEmpty(password);
+    Guard.Against.NullOrEmpty(passwordHash);
+    Guard.Against.NullOrEmpty(salt);
 
     if (!await IsUsernameUniqueAsync(username)) {
       return Result.Error("Username already exists");
@@ -26,8 +28,6 @@ public class UserService : IUserService
       return Result.Error("Username already exists");
     }
 
-    byte[] salt = ISecurityService.GenerateSalt();
-    var passwordHash = securityService_.HashPassword(password, salt);
     var user = new MorentUser(
       username,
       username, // Display name defaults to username
@@ -41,16 +41,13 @@ public class UserService : IUserService
     return Result.Success(user);
   }
 
-  public async Task<Result<MorentUser>> GetUserByCredentialAsync(string usernameOrEmail, string password)
+  public async Task<Result<MorentUser>> GetUserByUsernameOrEmail(string usernameOrEmail)
   {
     Guard.Against.NullOrEmpty(usernameOrEmail);
-    Guard.Against.NullOrEmpty(password);
     var spec = new UserByUsernameOrEmailSpec(usernameOrEmail);
     var user = await repository_.FirstOrDefaultAsync(spec);
 
-    if (user == null ||
-      !securityService_.VerifyPassword(password, user.PasswordHash, user.PasswordSalt)
-    )
+    if (user == null)
       return Result.Error("Wrong username or password");
 
     return Result.Success(user);
@@ -74,5 +71,10 @@ public class UserService : IUserService
   {
     var spec = new UserByUsernameOrEmailSpec(username);
     return !await repository_.AnyAsync(spec);
+  }
+
+  public Task<Result> UpdateRefreshToken(Guid UserId, RefreshTokenDetails refreshToken)
+  {
+    throw new NotImplementedException();
   }
 }

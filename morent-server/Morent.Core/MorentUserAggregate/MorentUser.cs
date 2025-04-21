@@ -11,6 +11,7 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     public byte[] PasswordSalt { get; private set; } = null!;
     public string Role { get; private set; } = null!; // "admin" or "user"
     public string? Phone { get; private set; }
+    public DateTime? CreatedAt { get; private set; }
 
     public MorentUser(string name, string username, string email, string passwordHash, byte[] passwordSalt, string? phone)
     {
@@ -21,6 +22,7 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
         PasswordSalt = Guard.Against.Null(passwordSalt);
         Phone = phone;
         Role = MorentUserRole.User.ToString();
+        CreatedAt = DateTime.UtcNow;
     }
 
     public void SetRole(MorentUserRole role) {
