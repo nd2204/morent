@@ -1,95 +1,159 @@
 import * as React from 'react';
-import { View } from 'react-native';
-import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from 'react-native-reanimated';
-import { Info } from '~/lib/icons/Info';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Button } from '~/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card';
-import { Progress } from '~/components/ui/progress';
-import { Text } from '~/components/ui/text';
-import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import { SectionList, View } from 'react-native';
+import { Header } from '~/components/Header';
+import { Hero } from '~/components/Hero';
+import { PickUpDropOff } from '~/components/PickUpDropOff';
+import { CarList } from '~/components/CarList';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const GITHUB_AVATAR_URI =
-  'https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg';
+const CARS_DATA = {
+  '1': {
+    id: '1',
+    carName: "Koenigsegg",
+    carType: "Sport",
+    fuelCapacity: "90L",
+    transmission: "Auto",
+    seats: "2 People",
+    pricePerDay: 99,
+    imageUrl: require('~/uploads/koenigsegg.png'),
+  },
+  '2': {
+    id: '2',
+    carName: "Nissan GT-R",
+    carType: "Sport",
+    fuelCapacity: "80L",
+    transmission: "Auto",
+    seats: "2 People",
+    pricePerDay: 80,
+    imageUrl: require('~/uploads/nissangtr.png'),
+  },
+  '3': {
+    id: '3',
+    carName: "All New Rush",
+    carType: "SUV",
+    fuelCapacity: "70L",
+    transmission: "Manual",
+    seats: "6 People",
+    pricePerDay: 72,
+    imageUrl: require('~/uploads/allnewrush.png'),
+  },
+  '4': {
+    id: '4',
+    carName: "CR-V",
+    carType: "SUV",
+    fuelCapacity: "80L",
+    transmission: "Manual",
+    seats: "6 People",
+    pricePerDay: 80,
+    imageUrl: require('~/uploads/crv.png'),
+  },
+  '5': {
+    id: '5',
+    carName: "All New Terios",
+    carType: "SUV",
+    fuelCapacity: "90L",
+    transmission: "Manual",
+    seats: "6 People",
+    pricePerDay: 75,
+    imageUrl: require('~/uploads/allnewterios.png'),
+  },
+};
+
+const POPULAR_CARS = [
+  CARS_DATA['1'],
+  CARS_DATA['2'],
+  CARS_DATA['3'],
+];
+
+const RECOMMENDED_CARS = [
+  CARS_DATA['4'],
+  CARS_DATA['5'],
+];
+
+const SECTIONS = [
+  {
+    type: 'hero',
+    data: [null]
+  },
+  {
+    type: 'pickUpDropOff',
+    data: [null]
+  },
+  {
+    type: 'popular',
+    data: [POPULAR_CARS]
+  },
+  {
+    type: 'recommended',
+    data: [RECOMMENDED_CARS]
+  }
+];
 
 export default function Screen() {
-  const [progress, setProgress] = React.useState(78);
+  const [favorites, setFavorites] = React.useState<string[]>([]);
+  const [isFilterVisible, setIsFilterVisible] = React.useState(false);
 
-  function updateProgressValue() {
-    setProgress(Math.floor(Math.random() * 100));
-  }
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => 
+      prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
+    );
+  };
+
+  const handleFilterPress = () => {
+    setIsFilterVisible(!isFilterVisible);
+    // TODO: Implement filter modal or dropdown
+    console.log('Filter pressed');
+  };
+
+  const renderItem = ({ item, section }: any) => {
+    switch (section.type) {
+      case 'hero':
+        return <Hero />;
+      case 'pickUpDropOff':
+        return <PickUpDropOff />;
+      case 'popular':
+        return (
+          <CarList
+            title="Popular Cars"
+            cars={item}
+            layout="horizontal"
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            containerClassName="py-4 mx-4"
+          />
+        );
+      case 'recommended':
+        return (
+          <CarList
+            title="Recommended Cars"
+            cars={item}
+            layout="vertical"
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            containerClassName="py-4 mb-4 mx-4"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <View className='flex-1 justify-center items-center gap-5 p-6 bg-secondary/30'>
-      <Card className='w-full max-w-sm p-6 rounded-2xl'>
-        <CardHeader className='items-center'>
-          <Avatar alt="Rick Sanchez's Avatar" className='w-24 h-24'>
-            <AvatarImage source={{ uri: GITHUB_AVATAR_URI }} />
-            <AvatarFallback>
-              <Text>RS</Text>
-            </AvatarFallback>
-          </Avatar>
-          <View className='p-3' />
-          <CardTitle className='pb-2 text-center'>Rick Sanchez</CardTitle>
-          <View className='flex-row'>
-            <CardDescription className='text-base font-semibold'>Scientist</CardDescription>
-            <Tooltip delayDuration={150}>
-              <TooltipTrigger className='px-2 pb-0.5 active:opacity-50'>
-                <Info size={14} strokeWidth={2.5} className='w-4 h-4 text-foreground/70' />
-              </TooltipTrigger>
-              <TooltipContent className='py-2 px-4 shadow'>
-                <Text className='native:text-lg'>Freelance</Text>
-              </TooltipContent>
-            </Tooltip>
-          </View>
-        </CardHeader>
-        <CardContent>
-          <View className='flex-row justify-around gap-3'>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Dimension</Text>
-              <Text className='text-xl font-semibold'>C-137</Text>
-            </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Age</Text>
-              <Text className='text-xl font-semibold'>70</Text>
-            </View>
-            <View className='items-center'>
-              <Text className='text-sm text-muted-foreground'>Species</Text>
-              <Text className='text-xl font-semibold'>Human</Text>
-            </View>
-          </View>
-        </CardContent>
-        <CardFooter className='flex-col gap-3 pb-0'>
-          <View className='flex-row items-center overflow-hidden'>
-            <Text className='text-sm text-muted-foreground'>Productivity:</Text>
-            <LayoutAnimationConfig skipEntering>
-              <Animated.View
-                key={progress}
-                entering={FadeInUp}
-                exiting={FadeOutDown}
-                className='w-11 items-center'
-              >
-                <Text className='text-sm font-bold text-sky-600'>{progress}%</Text>
-              </Animated.View>
-            </LayoutAnimationConfig>
-          </View>
-          <Progress value={progress} className='h-2' indicatorClassName='bg-sky-600' />
-          <View />
-          <Button
-            variant='outline'
-            className='shadow shadow-foreground/5'
-            onPress={updateProgressValue}
-          >
-            <Text>Update</Text>
-          </Button>
-        </CardFooter>
-      </Card>
-    </View>
+    <SafeAreaView className="flex-1 bg-background">
+      <Header 
+        onPressMenu={() => console.log('Menu pressed')}
+        onPressAvatar={() => console.log('Avatar pressed')}
+        onFilterPress={handleFilterPress}
+        showSearchBar={true}
+      />
+      <SectionList
+        sections={SECTIONS}
+        renderItem={renderItem}
+        renderSectionHeader={() => null}
+        stickySectionHeadersEnabled={false}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
   );
 }
+

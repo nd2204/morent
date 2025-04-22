@@ -1,60 +1,24 @@
-import React, { useState } from 'react';
-import { TextInput, View } from 'react-native';
-import clsx from 'clsx';
-import "@/global.css"
+import * as React from 'react';
+import { TextInput, type TextInputProps } from 'react-native';
+import { cn } from '~/lib/utils';
 
-// import { Container } from './styles';
+const Input = React.forwardRef<React.ElementRef<typeof TextInput>, TextInputProps>(
+  ({ className, placeholderClassName, ...props }, ref) => {
+    return (
+      <TextInput
+        ref={ref}
+        className={cn(
+          'web:flex h-10 native:h-12 web:w-full rounded-md border border-input bg-background px-3 web:py-2 text-base lg:text-sm native:text-lg native:leading-[1.25] text-foreground placeholder:text-muted-foreground web:ring-offset-background file:border-0 file:bg-transparent file:font-medium web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-ring web:focus-visible:ring-offset-2',
+          props.editable === false && 'opacity-50 web:cursor-not-allowed',
+          className
+        )}
+        placeholderClassName={cn('text-muted-foreground', placeholderClassName)}
+        {...props}
+      />
+    );
+  }
+);
 
-export default function Input({
-  className, onFocus, onBlur,
-  ...otherProps
-}: React.ComponentProps<typeof TextInput>) {
-  const [focused, setFocused] = useState<boolean>(false);
+Input.displayName = 'Input';
 
-  return (
-    <TextInput 
-      className={clsx(
-        // Default
-        'flex rounded-md border px-3 py-1 h-9 w-full min-w-0 bg-transparent text-black-100',
-        focused && "border-pink-500",
-        className
-      )}
-      onFocus={
-        (e) => {
-          setFocused(true);
-          onFocus && onFocus(e);
-        }
-      }
-      onBlur={
-        (e) => {
-          setFocused(false);
-          onBlur && onBlur(e);
-        }
-      }
-      {...otherProps}
-    />
-  );
-}
-
-
-// import * as React from "react"
-
-// import { cn } from "@/lib/utils"
-
-// function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-//   return (
-//     <input
-//       type={type}
-//       data-slot="input"
-//       className={cn(
-//         "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-//         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-//         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
-//         className
-//       )}
-//       {...props}
-//     />
-//   )
-// }
-
-// export { Input }
+export { Input };
