@@ -1,5 +1,5 @@
 using Morent.Application.Exceptions;
-using Morent.Core.Interfaces;
+using Morent.Application.Interfaces;
 using Morent.Core.MorentUserAggregate;
 
 namespace Morent.Application.Features.Users.Commands.Create;
@@ -7,12 +7,17 @@ namespace Morent.Application.Features.Users.Commands.Create;
 public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<UserDto>>
 {
   private readonly IRepository<MorentUser> repository_;
-  private readonly IUserService service_;
+  private readonly IUserService userService_;
+  private readonly IAuthService authService_;
 
-  public CreateUserHandler(IRepository<MorentUser> repository, IUserService service)
+  public CreateUserHandler(
+    IRepository<MorentUser> repository,
+    IAuthService authService,
+    IUserService userService)
   {
     repository_ = repository;
-    service_ = service;
+    userService_ = userService;
+    authService_ = authService;
   }
 
   public async Task<Result<UserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -24,7 +29,7 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, Result<UserD
       return Result.Invalid();
     }
 
-    var result = await service_.CreateUserAsync(request.username, request.password, request.email);
+    var result = await authService_.SignupAsync(request.username, request.password, request.email);
 
     if (!result.IsSuccess) {
       return Result.Error("");

@@ -1,7 +1,7 @@
 using Morent.Application.Models;
 using Morent.Core.MorentUserAggregate;
 
-namespace Morent.Core.Interfaces;
+namespace Morent.Application.Interfaces;
 
 public interface IUserService
 {

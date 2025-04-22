@@ -11,7 +11,7 @@ export function Hero() {
   return (
     <Card className='mx-5 mt-8'>
       <View className="bg-background px-4 py-6">
-        <View className="space-y-4">
+        <View className="gap-y-4">
           <Text className="text-3xl font-bold text-foreground leading-tight">
             The Best Platform for Car Rental
           </Text>

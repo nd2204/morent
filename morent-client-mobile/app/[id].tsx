@@ -287,7 +287,13 @@ export default function DetailScreen() {
       <View className="p-4 border-t border-border bg-background">
         <Button 
           className="w-full" 
-          onPress={() => console.log('Proceed to payment')}
+          onPress={() => router.push({
+            pathname: '/payment',
+            params: {
+              carId: car.id,
+              total: car.pricePerDay
+            }
+          })}
         >
           <Text className="text-primary-foreground font-semibold">
             Proceed to Payment

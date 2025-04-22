@@ -1,5 +1,5 @@
 using Morent.Application.Models;
-using Morent.Core.Interfaces;
+using Morent.Application.Interfaces;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.MorentUserAggregate.Specifications;
 
@@ -14,12 +14,11 @@ public class UserService : IUserService
   }
 
   public async Task<Result<MorentUser>> CreateUserAsync(
-    string username, string email, string passwordHash, byte[] salt)
+    string username, string email, string passwordHash)
   {
     Guard.Against.NullOrEmpty(username);
     Guard.Against.NullOrEmpty(email);
     Guard.Against.NullOrEmpty(passwordHash);
-    Guard.Against.NullOrEmpty(salt);
 
     if (!await IsUsernameUniqueAsync(username)) {
       return Result.Error("Username already exists");
@@ -27,6 +26,7 @@ public class UserService : IUserService
     if (!await IsEmailUniqueAsync(username)) {
       return Result.Error("Username already exists");
     }
+
 
     var user = new MorentUser(
       username,

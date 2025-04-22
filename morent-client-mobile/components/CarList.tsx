@@ -55,7 +55,7 @@ export function CarList({
         data={cars}
         keyExtractor={item => item.id}
         contentContainerClassName={cn(
-          isHorizontal ? "gap-x-4" : "gap-y-4",
+          isHorizontal ? "gap-x-4" : "gap-y-4 mb-20 pb-20",
           isHorizontal ? "px-4" : "px-0"
         )}
         renderItem={({ item }) => (
