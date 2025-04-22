@@ -1,4 +1,3 @@
-using Morent.Core.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -6,10 +5,9 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Ardalis.Result;
 using Microsoft.Extensions.Options;
-using Morent.Application.Features.Users;
 using Morent.Application.Interfaces;
 using Morent.Application.Extensions;
-using Morent.Application.Models.Identity;
+using Morent.Application.DTOs;
 
 namespace Morent.Infrastructure.Services;
 
@@ -20,13 +18,13 @@ public class AuthService : IAuthService
 
   public AuthService(
     IUserService userService,
-    IOptions<JwtSettings> jwtSetting)
+    IOptions<JwtSetting> jwtSetting)
   {
     userService_ = userService;
     jwtSetting_ = jwtSetting.Value;
   }
 
-  public async Task<Result<UserDto>> LoginAsync(string usernameOrEmail, string password)
+  public async Task<Result<AuthResponse>> LoginAsync(string usernameOrEmail, string password)
   {
     var result = await userService_.GetUserByUsernameOrEmail(usernameOrEmail);
     var user = result.Value;
@@ -64,21 +62,6 @@ public class AuthService : IAuthService
     return Result.Success(newUser);
   }
 
-  private static string HashPassword(string password, byte[] salt)
-  {
-    using (var hmac = new HMACSHA512(salt))
-    {
-      var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-      return Convert.ToBase64String(hash);
-    }
-  }
-
-  private static bool VerifyPassword(string password, string hash, byte[] salt)
-  {
-    return hash == HashPassword(password, salt);
-  }
-
-
   private static byte[] GenerateSalt(int size = 16)
   {
     byte[] salt = new byte[size];
@@ -95,9 +78,9 @@ public class AuthService : IAuthService
     {
         new Claim(JwtRegisteredClaimNames.Sub, user.Name),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email.Value),
         new Claim("uid", user.Id.ToString()),
-        new Claim(ClaimTypes.Role, user.Role)
+        new Claim(ClaimTypes.Role, user.Role.ToString())
     };
 
     var securityKey = new SymmetricSecurityKey(
@@ -117,6 +100,31 @@ public class AuthService : IAuthService
   }
 
   private string GenerateRefreshToken() {
+    throw new NotImplementedException();
+  }
+
+  public Task<AuthResponse> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<AuthResponse> AuthenticateWithOAuthAsync(OAuthLoginRequest request, CancellationToken cancellationToken = default)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<AuthResponse> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+  {
+    throw new NotImplementedException();
+  }
+
+  public Task<bool> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
+  {
     throw new NotImplementedException();
   }
 }

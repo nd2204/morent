@@ -14,12 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features/Cars/Get/" />
-    <Folder Include="Features/Users/Queries/" />
+    <ProjectReference Include="../Morent.Core/Morent.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Morent.Core/Morent.Core.csproj" />
+    <Folder Include="Extensions/" />
   </ItemGroup>
 
 </Project>
