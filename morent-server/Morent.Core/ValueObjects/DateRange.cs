@@ -8,6 +8,8 @@ public class DateRange : ValueObject
   public DateTime End { get; }
   public TimeSpan Duration => End - Start;
 
+  private DateRange() {} // For EF Core
+
   private DateRange(DateTime start, DateTime end)
   {
     Start = start;

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -134,9 +135,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         // Get user ID from claims
-        var userId = User.FindFirst("uid")?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        logger_.LogWarning("{0}", User);
 
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
             return Unauthorized();
 
         // Get refresh token from cookie
@@ -145,7 +147,7 @@ public class AuthController : ControllerBase
         // Revoke the token
         if (refreshToken != null)
         {
-            var command = new RevokeTokenCommand(refreshToken, userId);
+            var command = new RevokeTokenCommand(refreshToken, userGuid);
             await _mediator.Send(command);
         }
 

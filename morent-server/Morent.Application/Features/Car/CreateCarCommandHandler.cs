@@ -4,24 +4,18 @@ public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Guid>
 {
   private readonly ICarRepository _carRepository;
   // private readonly IUnitOfWork _unitOfWork;
-  private readonly ICurrentUserService _currentUserService;
 
   public CreateCarCommandHandler(
-      ICarRepository carRepository,
       // IUnitOfWork unitOfWork,
-      ICurrentUserService currentUserService)
+      ICarRepository carRepository
+      )
   {
     _carRepository = carRepository;
     // _unitOfWork = unitOfWork;
-    _currentUserService = currentUserService;
   }
 
   public async Task<Guid> Handle(CreateCarCommand command, CancellationToken cancellationToken)
   {
-    // Ensure only admin can create cars
-    if (_currentUserService.Role != MorentUserRole.Admin)
-      throw new UnauthorizedAccessException("Only administrators can create cars");
-
     var carId = Guid.NewGuid();
     var pricePerDay = new Money(command.PricePerDay, command.Currency);
 

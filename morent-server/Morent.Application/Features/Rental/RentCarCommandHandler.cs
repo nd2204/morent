@@ -8,31 +8,24 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
 {
   private readonly ICarRepository _carRepository;
   private readonly IRentalRepository _rentalRepository;
-  private readonly ICurrentUserService _currentUserService;
   private readonly IPaymentService _paymentService;
-  private readonly IUnitOfWork _unitOfWork;
+  // private readonly IUnitOfWork _unitOfWork;
 
   public RentCarCommandHandler(
       ICarRepository carRepository,
       IRentalRepository rentalRepository,
-      ICurrentUserService currentUserService,
-      IPaymentService paymentService,
-      IUnitOfWork unitOfWork)
+      // IUnitOfWork unitOfWork,
+      IPaymentService paymentService
+      )
   {
     _carRepository = carRepository;
     _rentalRepository = rentalRepository;
-    _currentUserService = currentUserService;
     _paymentService = paymentService;
-    _unitOfWork = unitOfWork;
+    // _unitOfWork = unitOfWork;
   }
 
   public async Task<Guid> Handle(RentCarCommand command, CancellationToken cancellationToken)
   {
-    if (!_currentUserService.IsAuthenticated || !_currentUserService.UserId.HasValue)
-      throw new UnauthorizedAccessException("User must be authenticated to rent a car");
-
-    var userId = _currentUserService.UserId.Value;
-
     // Validate dates
     if (command.PickupDate >= command.DropoffDate)
       throw new ApplicationException("Pickup date must be before dropoff date");
@@ -75,7 +68,7 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
 
     // Process payment
     var paymentId = await _paymentService.ProcessPaymentAsync(
-        userId,
+        command.UserId,
         Guid.NewGuid(), // Temporary rental ID for payment processing
         totalCost,
         cancellationToken);
@@ -87,7 +80,7 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
     Guid rentalId = Guid.NewGuid();
     var rental = MorentRental.Create(
         rentalId,
-        userId,
+        command.UserId,
         car.Id,
         rentalPeriod,
         pickupLocation,

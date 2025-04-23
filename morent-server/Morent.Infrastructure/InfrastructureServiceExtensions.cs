@@ -18,12 +18,15 @@ public static class InfrastructureServiceExtensions
         services.AddMorentDbContext(configuration);
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
+        services.AddHttpClient();
+
         services
             .AddScoped(typeof(IRepository<>), typeof(EFRepository<>))
             .AddScoped(typeof(IReadRepository<>), typeof(EFRepository<>))
             .AddScoped<ICarRepository, CarRepository>()
             .AddScoped<IRentalRepository, RentalRepository>()
             .AddScoped<IReviewRepository, ReviewRepository>()
+            .AddScoped<IPaymentService, PaymentService>()
             .AddScoped<IUserRepository, UserRepository>()
             .AddScoped<IOAuthService, OAuthService>()
             .AddScoped<IAuthService, AuthService>();

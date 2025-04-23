@@ -4,29 +4,17 @@ public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEn
 {
   private readonly IRentalRepository _rentalRepository;
   private readonly ICarRepository _carRepository;
-  private readonly ICurrentUserService _currentUserService;
 
   public GetUserRentalsQueryHandler(
       IRentalRepository rentalRepository,
-      ICarRepository carRepository,
-      ICurrentUserService currentUserService)
+      ICarRepository carRepository)
   {
     _rentalRepository = rentalRepository;
     _carRepository = carRepository;
-    _currentUserService = currentUserService;
   }
 
   public async Task<IEnumerable<RentalDto>> Handle(GetUserRentalsQuery query, CancellationToken cancellationToken)
   {
-    if (!_currentUserService.IsAuthenticated || !_currentUserService.UserId.HasValue)
-      throw new UnauthorizedAccessException("User must be authenticated to view rentals");
-
-    var currentUserId = _currentUserService.UserId.Value;
-
-    // Only allow users to see their own rentals, unless they're an admin
-    if (query.UserId != currentUserId && _currentUserService.Role != MorentUserRole.Admin)
-      throw new UnauthorizedAccessException("You can only view your own rentals");
-
     var rentals = await _rentalRepository.GetRentalsByUserIdAsync(query.UserId, cancellationToken);
 
     if (query.Status.HasValue)

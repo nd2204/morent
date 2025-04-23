@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Data/Configs/" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="../Morent.Application/Morent.Application.csproj" />
     <ProjectReference Include="../Morent.Core/Morent.Core.csproj" />
   </ItemGroup>

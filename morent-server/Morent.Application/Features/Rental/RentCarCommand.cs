@@ -2,6 +2,7 @@ namespace Morent.Application.Features.Rental;
 
 public class RentCarCommand : ICommand<Guid>
 {
+  public Guid UserId { get; set; }
   public Guid CarId { get; set; }
   public DateTime PickupDate { get; set; }
   public DateTime DropoffDate { get; set; }

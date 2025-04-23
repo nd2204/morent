@@ -1,13 +1,11 @@
+using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data.Configs;
 
 namespace Morent.Infrastructure.Data;
 
-public class MorentDbContext : DbContext
+public class MorentDbContext(DbContextOptions<MorentDbContext> options) : DbContext(options)
 {
-  public MorentDbContext(DbContextOptions<MorentDbContext> options)
-      : base(options)
-  {
-  }
+  // private readonly IDomainEventDispatcher? _dispatcher = dispatcher;
 
   public DbSet<MorentUser> Users => Set<MorentUser>();
   public DbSet<MorentCar> Cars => Set<MorentCar>();
@@ -16,8 +14,25 @@ public class MorentDbContext : DbContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(MorentDbContext).Assembly);
     base.OnModelCreating(modelBuilder);
-    modelBuilder.ApplyConfiguration(new MorentUserConfiguration());
-    // modelBuilder.ApplyConfigurationsFromAssembly(typeof(MorentDbContext).Assembly);
   }
+
+  // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+  // {
+  //   int result = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+  //   // ignore events if no dispatcher provided
+  //   if (_dispatcher == null) return result;
+
+  //   // dispatch events only if save was successful
+  //   var entitiesWithEvents = ChangeTracker.Entries<HasDomainEventsBase>()
+  //       .Select(e => e.Entity)
+  //       .Where(e => e.DomainEvents.Any())
+  //       .ToArray();
+
+  //   await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
+
+  //   return result;
+  // }
 }

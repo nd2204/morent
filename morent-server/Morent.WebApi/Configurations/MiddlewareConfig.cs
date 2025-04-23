@@ -25,7 +25,7 @@ public static class MiddlewareConfig
     app.UseHttpsRedirection();
     app.UseHsts();
     app.MapControllers();
-    app.UseCors("AllowReactApp");
+    app.UseCors("All");
 
     app.UseAuthentication();
     app.UseAuthorization();

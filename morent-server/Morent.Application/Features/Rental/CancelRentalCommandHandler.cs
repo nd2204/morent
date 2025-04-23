@@ -6,34 +6,25 @@ public class CancelRentalCommandHandler : ICommandHandler<CancelRentalCommand, b
 {
   private readonly IRentalRepository _rentalRepository;
   private readonly IPaymentService _paymentService;
-  private readonly ICurrentUserService _currentUserService;
-  private readonly IUnitOfWork _unitOfWork;
+  // private readonly IUnitOfWork _unitOfWork;
 
   public CancelRentalCommandHandler(
       IRentalRepository rentalRepository,
-      IPaymentService paymentService,
-      ICurrentUserService currentUserService,
-      IUnitOfWork unitOfWork)
+      // IUnitOfWork unitOfWork,
+      IPaymentService paymentService)
   {
     _rentalRepository = rentalRepository;
     _paymentService = paymentService;
-    _currentUserService = currentUserService;
-    _unitOfWork = unitOfWork;
+    // _unitOfWork = unitOfWork;
   }
 
   public async Task<bool> Handle(CancelRentalCommand command, CancellationToken cancellationToken)
   {
-    if (!_currentUserService.IsAuthenticated || !_currentUserService.UserId.HasValue)
-      throw new UnauthorizedAccessException("User must be authenticated to cancel a rental");
-
-    var userId = _currentUserService.UserId.Value;
-
     var rental = await _rentalRepository.GetByIdAsync(command.RentalId, cancellationToken);
     if (rental == null)
       throw new ApplicationException($"Rental with ID {command.RentalId} not found");
 
-    // Verify it's the user's rental or user is admin
-    if (rental.UserId != userId && _currentUserService.Role != MorentUserRole.Admin)
+    if (rental.UserId != command.UserId)
       throw new UnauthorizedAccessException("You can only cancel your own rentals");
 
     rental.CancelRental();

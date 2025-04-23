@@ -6,24 +6,17 @@ public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, bool>
 {
   private readonly ICarRepository _carRepository;
   // private readonly IUnitOfWork _unitOfWork;
-  private readonly ICurrentUserService _currentUserService;
 
   public UpdateCarCommandHandler(
-      ICarRepository carRepository,
       // IUnitOfWork unitOfWork,
-      ICurrentUserService currentUserService)
+      ICarRepository carRepository)
   {
-    _carRepository = carRepository;
     // _unitOfWork = unitOfWork;
-    _currentUserService = currentUserService;
+    _carRepository = carRepository;
   }
 
   public async Task<bool> Handle(UpdateCarCommand command, CancellationToken cancellationToken)
   {
-    // Ensure only admin can update cars
-    if (_currentUserService.Role != MorentUserRole.Admin)
-      throw new UnauthorizedAccessException("Only administrators can update cars");
-
     var car = await _carRepository.GetByIdAsync(command.Id, cancellationToken);
     if (car == null)
       throw new ApplicationException($"Car with ID {command.Id} not found");

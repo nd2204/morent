@@ -28,6 +28,13 @@ public static class ServiceConfig
             .AllowAnyMethod()
             .AllowAnyHeader());
       })
+      .AddCors(options =>
+      {
+        options.AddPolicy("All", builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+      })
       .AddAuthorization()
       ;
 

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Morent.Infrastructure.Settings;
 
 namespace Morent.WebApi.Configurations;
 
@@ -26,13 +27,19 @@ public static class JwtConfigs
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = configuration.GetValue<string>("Jwt:Issuer"),
-        ValidAudience = configuration.GetValue<string>("Jwt:Audience"),
+        ValidIssuer = configuration.GetValue<string>("AppSettings:JwtIssuer"),
+        ValidAudience = configuration.GetValue<string>("AppSettings:JwtAudience"),
         IssuerSigningKey = new SymmetricSecurityKey(
-          Encoding.UTF8.GetBytes(configuration.GetValue<string>("Jwt:Secret")!))
+          Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:JwtSecret")!))
       };
     })
     ;
+
+    // Update AppSettings to include OAuth client IDs
+    services.Configure<AppSettings>(options =>
+    {
+      configuration.GetSection("AppSettings").Bind(options);
+    });
 
     return services;
   }
