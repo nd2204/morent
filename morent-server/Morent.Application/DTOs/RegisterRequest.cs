@@ -4,18 +4,16 @@ namespace Morent.Application.DTOs;
 
 public class RegisterRequest
 {
+  public string? Name { get; set; } = null!;
+
   [Required]
-  public string Username { get; set; }
+  public string Username { get; set; } = null!;
 
   [Required]
   [EmailAddress]
-  public string Email { get; set; }
+  public string Email { get; set; } = null!;
 
   [Required]
   [MinLength(8)]
-  public string Password { get; set; }
-
-  [Required]
-  [Compare("Password")]
-  public string ConfirmPassword { get; set; }
+  public string Password { get; set; } = null!;
 }

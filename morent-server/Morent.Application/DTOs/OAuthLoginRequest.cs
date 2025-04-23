@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 namespace Morent.Application.DTOs;
 
 public class OAuthLoginRequest
@@ -6,5 +7,5 @@ public class OAuthLoginRequest
   [Required]
   public string ProviderToken { get; set; } = null!;
   [Required]
-  public OAuthProvider Provider { get; set; }
+  public string Provider { get; set; } = null!;
 }

@@ -6,8 +6,6 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     public Email Email { get; private set; }
     public string Username { get; private set; }
     public string? PasswordHash { get; private set; }
-    public string? OAuthId { get; private set; }
-    public OAuthProvider AuthProvider { get; private set; }
     public MorentUserRole Role { get; private set; }
     public string? ProfileImageUrl { get; private set; }
     public bool IsActive { get; private set; }
@@ -17,16 +15,15 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     private readonly List<RefreshToken> _refreshTokens = new();
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 
+    private readonly List<MorentUserOAuthLogin> _OAuthLogins = new();
+    public IReadOnlyCollection<MorentUserOAuthLogin> OAuthLogins => _OAuthLogins.AsReadOnly();
+
     // For EF Core
     private MorentUser() { }
 
     // For local authentication
     public MorentUser(
-        string? name,
-        string username,
-        Email email,
-        string passwordHash,
-        MorentUserRole role = MorentUserRole.Customer)
+        string? name, string username, Email email, string? passwordHash, MorentUserRole role = MorentUserRole.Customer)
     {
         Guard.Against.NullOrEmpty(username, nameof(username));
         Guard.Against.NullOrEmpty(passwordHash, nameof(passwordHash));
@@ -36,32 +33,8 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
-        AuthProvider = OAuthProvider.Local;
         CreatedAt = DateTime.UtcNow;
         IsActive = true;
-    }
-
-    // For OAuth authentication
-    public MorentUser(
-        string name,
-        Email email,
-        OAuthProvider provider,
-        string oauthId,
-        string profileImageUrl = null,
-        MorentUserRole role = MorentUserRole.Customer)
-    {
-        Guard.Against.NullOrEmpty(name, nameof(name));
-        Guard.Against.NullOrEmpty(oauthId, nameof(oauthId));
-        Id = Guid.NewGuid();
-        Name = name;
-        Email = email;
-        AuthProvider = provider;
-        OAuthId = oauthId ?? throw new ArgumentNullException(nameof(oauthId));
-        ProfileImageUrl = profileImageUrl;
-        Role = role;
-        CreatedAt = DateTime.UtcNow;
-        IsActive = true;
-        LastLoginAt = null;
     }
 
     // Factory method for local user creation
@@ -81,20 +54,6 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
         return Result.Success(user);
     }
 
-    // Factory method for external provider user creation
-    public static Result<MorentUser> CreateExternalUser(string name, Email email, OAuthProvider provider, string externalProviderId)
-    {
-        if (string.IsNullOrWhiteSpace(externalProviderId))
-            return Result.Invalid(new ValidationError("User", "External provider ID cannot be empty."));
-
-        if (provider == OAuthProvider.Local)
-            return Result.Invalid(new ValidationError("User", "Invalid auth provider for external user."));
-
-        var user = new MorentUser(Guid.NewGuid().ToString(), email, provider, externalProviderId);
-        user.RegisterDomainEvent(new UserCreatedEvent(user.Id));
-        return Result.Success(user);
-    }
-
     public Result UpdateProfile(string name, string? profileImageUrl)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -109,9 +68,6 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
 
     public Result ChangePassword(string currentPasswordHash, string newPasswordHash)
     {
-        if (AuthProvider != OAuthProvider.Local)
-            return Result.Error("Cannot change password for externally authenticated users.");
-
         if (string.IsNullOrWhiteSpace(newPasswordHash))
             return Result.Invalid(new ValidationError("User", "New password hash cannot be empty."));
 
@@ -178,5 +134,13 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     {
         var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Token == token);
         refreshToken?.Revoke();
+    }
+
+    public void AddExternalLogin(string provider, string providerKey)
+    {
+        if (_OAuthLogins.Any(x => x.Provider == provider && x.ProviderKey == providerKey))
+            return;
+
+        _OAuthLogins.Add(new MorentUserOAuthLogin(provider, providerKey));
     }
 }

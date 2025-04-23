@@ -16,14 +16,14 @@ public class RefreshToken : ValueObject
   {
     Token = token;
     ExpiresAt = expiresAt;
-    CreatedAt = DateTime.UtcNow;
+    CreatedAt = DateTime.Now;
   }
 
   public void Revoke()
   {
     if (!IsRevoked)
     {
-      RevokedAt = DateTime.UtcNow;
+      RevokedAt = DateTime.Now;
     }
   }
 

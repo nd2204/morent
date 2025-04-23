@@ -6,121 +6,171 @@ using Microsoft.IdentityModel.Tokens;
 using Ardalis.Result;
 using Microsoft.Extensions.Options;
 using Morent.Application.Interfaces;
-using Morent.Application.Extensions;
 using Morent.Application.DTOs;
+using BCrypt.Net;
+using Morent.Core.ValueObjects;
+using Morent.Infrastructure.Settings;
+using Morent.Application.Repositories;
 
 namespace Morent.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-  private readonly IUserService userService_;
-  private readonly JwtSettings jwtSetting_;
+  private readonly IUserRepository _userRepository;
+  private readonly IOAuthService _oAuthService;
+  private readonly AppSettings _appSettings;
+  private readonly IHttpClientFactory _httpClientFactory;
 
   public AuthService(
-    IUserService userService,
-    IOptions<JwtSetting> jwtSetting)
+    IUserRepository userRepository,
+    IOptions<AppSettings> appSettings,
+    IOAuthService oAuthService,
+    IHttpClientFactory httpClientFactory)
   {
-    userService_ = userService;
-    jwtSetting_ = jwtSetting.Value;
+    _userRepository = userRepository;
+    _appSettings = appSettings.Value;
+    _httpClientFactory = httpClientFactory;
+    _oAuthService = oAuthService;
   }
 
-  public async Task<Result<AuthResponse>> LoginAsync(string usernameOrEmail, string password)
+  public RefreshToken GenerateRefreshToken()
   {
-    var result = await userService_.GetUserByUsernameOrEmail(usernameOrEmail);
-    var user = result.Value;
-    if (user == null)
-    {
-      return Result.NotFound($"User with username or email {usernameOrEmail} not found.");
-    }
+    // Generate a secure random token
+    var randomBytes = new byte[64];
+    using var rng = RandomNumberGenerator.Create();
+    rng.GetBytes(randomBytes);
 
-    if (!VerifyPassword(password, user.PasswordHash, user.PasswordSalt)) {
-      return Result.Error("Wrong username or password");
-    }
+    var token = Convert.ToBase64String(randomBytes);
+    var expiresAt = DateTime.Now.AddDays(_appSettings.RefreshTokenExpiryDays);
 
-    var userDto = user.ToDto();
-    userDto.SetSecureToken(
-      GenerateToken(user),
-      GenerateRefreshToken(),
-      jwtSetting_.DurationInMinutes.ToString()
-      );
-
-    return Result.Success(userDto);
+    return new RefreshToken(token, expiresAt);
   }
 
-  public async Task<Result<UserDto>> SignupAsync(string username, string password, string email)
-  {
-    var salt = GenerateSalt();
-    var hashedPassword = HashPassword(password, salt);
-    var result = await userService_.CreateUserAsync(username, email, hashedPassword, salt);
-    
-    if (result.IsError()) {
-      return Result.Error(result.Errors.First() ?? "Unexpected error.");
-    }
-
-    var newUser = result.Value.ToDto();
-
-    return Result.Success(newUser);
-  }
-
-  private static byte[] GenerateSalt(int size = 16)
-  {
-    byte[] salt = new byte[size];
-    using (var rng = RandomNumberGenerator.Create())
-    {
-      rng.GetBytes(salt);
-    }
-    return salt;
-  }
-
-  private string GenerateToken(MorentUser user)
+  public string GenerateJwtToken(MorentUser user)
   {
     var claims = new[]
     {
         new Claim(JwtRegisteredClaimNames.Sub, user.Name),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(JwtRegisteredClaimNames.Email, user.Email.Value),
-        new Claim("uid", user.Id.ToString()),
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Role, user.Role.ToString())
     };
 
     var securityKey = new SymmetricSecurityKey(
-     Encoding.UTF8.GetBytes(jwtSetting_.Secret)
+     Encoding.UTF8.GetBytes(_appSettings.JwtSecret)
      );
     var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
     var token = new JwtSecurityToken(
-        issuer: jwtSetting_.Issuer,
-        audience: jwtSetting_.Audience,
+        issuer: _appSettings.JwtIssuer,
+        audience: _appSettings.JwtAudience,
         claims: claims,
-        expires: DateTime.Now.AddMinutes(jwtSetting_.DurationInMinutes),
+        expires: DateTime.Now.AddMinutes(_appSettings.JwtExpiryMinutes),
         signingCredentials: credentials
         );
 
     return new JwtSecurityTokenHandler().WriteToken(token);
   }
 
-  private string GenerateRefreshToken() {
-    throw new NotImplementedException();
+
+  public string HashPassword(string password)
+  {
+    return BCrypt.Net.BCrypt.HashPassword(password, 12);
   }
 
-  public Task<AuthResponse> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
+  public bool VerifyPassword(string password, string passwordHash)
   {
-    throw new NotImplementedException();
+    return BCrypt.Net.BCrypt.Verify(password, passwordHash);
   }
 
-  public Task<AuthResponse> AuthenticateWithOAuthAsync(OAuthLoginRequest request, CancellationToken cancellationToken = default)
+  public AuthResponse GenerateAuthResponse(MorentUser user)
   {
-    throw new NotImplementedException();
+    var jwtToken = GenerateJwtToken(user);
+    var refreshToken = GenerateRefreshToken();
+
+    // Create response with both tokens
+    return new AuthResponse
+    {
+      AccessToken = jwtToken,
+      RefreshToken = refreshToken.Token,
+      ExpiresAt = DateTime.UtcNow.AddMinutes(_appSettings.JwtExpiryMinutes),
+      User = new UserDto
+      {
+        UserId = user.Id,
+        Name = user.Name,
+        Email = user.Email.Value,
+      }
+    };
   }
 
-  public Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+  public async Task<AuthResponse> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
   {
-    throw new NotImplementedException();
+    // Find user by email
+    var user = await _userRepository.GetByUsernameOrEmail(request.LoginId);
+    if (user == null)
+      throw new UnauthorizedAccessException("Invalid email or password");
+
+    // Validate password
+    bool isPasswordValid = VerifyPassword(request.Password, user.PasswordHash!);
+    if (!isPasswordValid)
+      throw new UnauthorizedAccessException("Invalid email or password");
+
+    // Generate auth response (access token + refresh token)
+    var authResponse = GenerateAuthResponse(user);
+
+    // Add new refresh token to user entity
+    var refreshToken = new RefreshToken(authResponse.RefreshToken, DateTime.UtcNow.AddDays(7));
+    user.AddRefreshToken(refreshToken);
+
+    // Save the new refresh token
+    await _userRepository.UpdateAsync(user);
+
+    return authResponse;
   }
 
-  public Task<AuthResponse> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
+  public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
   {
-    throw new NotImplementedException();
+    // Validate email is unique
+    if (await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken))
+      throw new ApplicationException("Email is already in use");
+
+    // Create the user with hashed password
+    var userId = Guid.NewGuid();
+    var passwordHash = HashPassword(request.Password);
+    var email = new Email(request.Email);
+
+    var user = new MorentUser(request.Name, request.Username, email, passwordHash);
+    await _userRepository.AddAsync(user, cancellationToken);
+    await _userRepository.SaveChangesAsync();
+    // await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+    // Return authentication response
+    var authRequest = new LoginRequest
+    {
+      LoginId = request.Email,
+      Password = request.Password
+    };
+
+    return await AuthenticateAsync(authRequest, cancellationToken);
+  }
+
+  public async Task<MorentUser?> ValidateRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
+  {
+    if (string.IsNullOrEmpty(token))
+      return null;
+
+    var user = await _userRepository.GetByRefreshTokenAsync(token);
+
+    if (user == null)
+      return null;
+
+    var refreshToken = user.GetActiveRefreshToken(token);
+
+    if (refreshToken is null || refreshToken.IsRevoked)
+      return null;
+
+    return user;
   }
 
   public Task<bool> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
