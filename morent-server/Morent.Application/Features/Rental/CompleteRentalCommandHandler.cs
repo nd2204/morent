@@ -7,16 +7,16 @@ public class CompleteRentalCommandHandler : ICommandHandler<CompleteRentalComman
 {
   private readonly IRentalRepository _rentalRepository;
   private readonly ICarRepository _carRepository;
-  // private readonly IUnitOfWork _unitOfWork;
+  private readonly IUnitOfWork _unitOfWork;
 
   public CompleteRentalCommandHandler(
       IRentalRepository rentalRepository,
-      // IUnitOfWork unitOfWork,
+      IUnitOfWork unitOfWork,
       ICarRepository carRepository)
   {
     _rentalRepository = rentalRepository;
     _carRepository = carRepository;
-    // _unitOfWork = unitOfWork;
+    _unitOfWork = unitOfWork;
   }
 
   public async Task<bool> Handle(CompleteRentalCommand command, CancellationToken cancellationToken)
@@ -31,8 +31,7 @@ public class CompleteRentalCommandHandler : ICommandHandler<CompleteRentalComman
     // Add domain event
     // var domainEvent = new RentalCompletedEvent(rental.Id, rental.CarId, rental.UserId);
 
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
-    await _rentalRepository.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return true;
   }

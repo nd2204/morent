@@ -5,5 +5,6 @@ public enum FuelType
   Petrol,
   Diesel,
   Electric,
-  Hybrid
+  Hybrid,
+  Gasoline
 }

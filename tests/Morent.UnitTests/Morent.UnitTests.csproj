@@ -10,12 +10,22 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit" Version="1.7.0.1540" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\morent-server\Morent.Application\Morent.Application.csproj" />
+    <ProjectReference Include="..\..\morent-server\Morent.Core\Morent.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Morent.Application.Test\" />
+    <Folder Include="Morent.Core.Test\" />
   </ItemGroup>
 
 </Project>

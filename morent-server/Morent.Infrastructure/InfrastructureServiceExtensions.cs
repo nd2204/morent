@@ -23,13 +23,23 @@ public static class InfrastructureServiceExtensions
         services
             .AddScoped(typeof(IRepository<>), typeof(EFRepository<>))
             .AddScoped(typeof(IReadRepository<>), typeof(EFRepository<>))
+
+            .AddSingleton<IImageStorage, LocalFileSystemStorage>()
+            .AddScoped<IUnitOfWork, EfUnitOfWork>()
+
             .AddScoped<ICarRepository, CarRepository>()
             .AddScoped<IRentalRepository, RentalRepository>()
             .AddScoped<IReviewRepository, ReviewRepository>()
             .AddScoped<IPaymentService, PaymentService>()
             .AddScoped<IUserRepository, UserRepository>()
+
             .AddScoped<IOAuthService, OAuthService>()
-            .AddScoped<IAuthService, AuthService>();
+            .AddScoped<IAuthService, AuthService>()
+
+            .AddScoped<IImageService, ImageService>()
+            .AddScoped<ICarImageService, CarImageService>()
+            .AddScoped<IUserProfileService, UserProfileService>()
+            ;
 
         logger.LogInformation("{Project} registered", "Infrastructure services");
         return services;

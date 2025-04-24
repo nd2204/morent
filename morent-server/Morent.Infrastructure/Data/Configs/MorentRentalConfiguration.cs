@@ -1,4 +1,6 @@
 
+using Morent.Core.MorentPaymentAggregate;
+
 namespace Morent.Infrastructure.Data.Configs;
 
 public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
@@ -7,6 +9,10 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
   {
     // Configure Rental builder
     builder.HasKey(e => e.Id);
+
+    builder.HasOne<MorentPayment>()
+      .WithOne()
+      .HasForeignKey<MorentPayment>(p => p.RentalId);
 
     builder.HasOne<MorentCar>()
       .WithMany()
@@ -45,30 +51,30 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
     // Configure Location Value Objects
     builder.ComplexProperty(r => r.PickupLocation, location =>
     {
-      location.Property(l => l.Address)
-        .HasColumnName("PickupAddress")
+      location.Property(l => l.Country)
+        .HasColumnName("PickupCountry")
         .HasMaxLength(200)
         .IsRequired();
 
-      location.Property(l => l.Latitude)
-        .HasColumnName("PickupLatitude");
+      location.Property(l => l.Address)
+        .HasColumnName("PickupAddress");
 
-      location.Property(l => l.Longitude)
-        .HasColumnName("PickupLongitude");
+      location.Property(l => l.City)
+        .HasColumnName("PickupCity");
     });
 
     builder.ComplexProperty(r => r.DropoffLocation, location =>
     {
-      location.Property(l => l.Address)
-        .HasColumnName("DropoffAddress")
+      location.Property(l => l.Country)
+        .HasColumnName("PickupCountry")
         .HasMaxLength(200)
         .IsRequired();
 
-      location.Property(l => l.Latitude)
-        .HasColumnName("DropoffLatitude");
+      location.Property(l => l.Address)
+        .HasColumnName("PickupAddress");
 
-      location.Property(l => l.Longitude)
-        .HasColumnName("DropoffLongitude");
+      location.Property(l => l.City)
+        .HasColumnName("PickupCity");
     });
   }
 }

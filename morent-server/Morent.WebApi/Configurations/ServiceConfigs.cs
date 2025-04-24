@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using  Microsoft.OpenApi.Models;
 using Morent.Core;
@@ -20,6 +21,7 @@ public static class ServiceConfig
       .AddInfrastructureServices(logger, builder.Configuration)
       .AddCoreServices(logger)
       .AddMediatrConfigs()
+      .AddGoogleConfigs(builder.Configuration)
       .AddJwtConfigs(builder.Configuration)
       .AddCors(options =>
       {
@@ -37,6 +39,11 @@ public static class ServiceConfig
       })
       .AddAuthorization()
       ;
+
+    if (builder.Environment.IsDevelopment()) {
+      // Use test mailing service in development
+      // services.AddScoped<IEmailSender, Mime>;
+    }
 
     logger.LogInformation("{Project} registered", "WebApi services");
 

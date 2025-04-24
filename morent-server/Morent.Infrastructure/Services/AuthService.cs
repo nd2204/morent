@@ -3,14 +3,12 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Ardalis.Result;
 using Microsoft.Extensions.Options;
 using Morent.Application.Interfaces;
-using Morent.Application.DTOs;
-using BCrypt.Net;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Settings;
 using Morent.Application.Repositories;
+using Morent.Application.Features.Auth.DTOs;
 
 namespace Morent.Infrastructure.Services;
 
@@ -19,16 +17,19 @@ public class AuthService : IAuthService
   private readonly IUserRepository _userRepository;
   private readonly IOAuthService _oAuthService;
   private readonly AppSettings _appSettings;
+  private readonly IUnitOfWork _unitOfWork;
   private readonly IHttpClientFactory _httpClientFactory;
 
   public AuthService(
     IUserRepository userRepository,
     IOptions<AppSettings> appSettings,
     IOAuthService oAuthService,
+    IUnitOfWork unitOfWork,
     IHttpClientFactory httpClientFactory)
   {
     _userRepository = userRepository;
     _appSettings = appSettings.Value;
+    _unitOfWork = unitOfWork;
     _httpClientFactory = httpClientFactory;
     _oAuthService = oAuthService;
   }
@@ -50,10 +51,9 @@ public class AuthService : IAuthService
   {
     var claims = new[]
     {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Name),
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(JwtRegisteredClaimNames.Email, user.Email.Value),
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Role, user.Role.ToString())
     };
 
@@ -138,12 +138,11 @@ public class AuthService : IAuthService
     // Create the user with hashed password
     var userId = Guid.NewGuid();
     var passwordHash = HashPassword(request.Password);
-    var email = new Email(request.Email);
+    var email = new Core.ValueObjects.Email(request.Email);
 
     var user = new MorentUser(request.Name, request.Username, email, passwordHash);
     await _userRepository.AddAsync(user, cancellationToken);
-    await _userRepository.SaveChangesAsync();
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     // Return authentication response
     var authRequest = new LoginRequest

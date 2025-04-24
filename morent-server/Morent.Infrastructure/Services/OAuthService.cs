@@ -77,18 +77,18 @@ public class OAuthService : IOAuthService
     var emails = JsonSerializer.Deserialize<JsonElement>(emailContent);
 
     // Find primary email
-    string email = null;
+    string email = null!;
     foreach (var emailObj in emails.EnumerateArray())
     {
       if (emailObj.TryGetProperty("primary", out var primary) && primary.GetBoolean())
       {
-        email = emailObj.GetProperty("email").GetString();
+        email = emailObj.GetProperty("email").GetString()!;
         break;
       }
     }
 
     // Parse name into first/last
-    string fullName = user.GetProperty("name").GetString();
+    string fullName = user.GetProperty("name").GetString()!;
     string[] nameParts = (fullName ?? "").Split(' ');
     string firstName = nameParts.Length > 0 ? nameParts[0] : "";
     string lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
@@ -98,7 +98,7 @@ public class OAuthService : IOAuthService
       Email = email,
       FirstName = firstName,
       LastName = lastName,
-      ProviderKey = user.GetProperty("id").GetString()
+      ProviderKey = user.GetProperty("id").GetString()!
     };
   }
 }

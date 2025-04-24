@@ -18,7 +18,324 @@ namespace Morent.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
 
-            modelBuilder.Entity("Morent.Core.Entities.MorentReview", b =>
+            modelBuilder.Entity("Morent.Core.MediaAggregate.MorentImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MorentImage");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CarModelId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LicensePlate")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty<Dictionary<string, object>>("CurrentLocation", "Morent.Core.MorentCarAggregate.MorentCar.CurrentLocation#Location", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Address")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+                        });
+
+                    b.ComplexProperty<Dictionary<string, object>>("PricePerDay", "Morent.Core.MorentCarAggregate.MorentCar.PricePerDay#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("PriceAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PriceCurrency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarModelId");
+
+                    b.ToTable("Cars");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCarImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ImageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("ImageId");
+
+                    b.ToTable("MorentCarImage");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCarModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CarType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FuelTankCapacity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FuelType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Gearbox")
+                        .HasMaxLength(50)
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SeatCapacity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Brand", "ModelName", "Year")
+                        .IsUnique();
+
+                    b.ToTable("CarModels");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentPaymentAggregate.MorentPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RentalId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty<Dictionary<string, object>>("PaymentAmount", "Morent.Core.MorentPaymentAggregate.MorentPayment.PaymentAmount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RentalId")
+                        .IsUnique();
+
+                    b.ToTable("MorentPayment");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("MorentCarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty<Dictionary<string, object>>("DropoffLocation", "Morent.Core.MorentRentalAggregate.MorentRental.DropoffLocation#Location", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Address")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupAddress");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupCountry");
+                        });
+
+                    b.ComplexProperty<Dictionary<string, object>>("PickupLocation", "Morent.Core.MorentRentalAggregate.MorentRental.PickupLocation#Location", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Address")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupAddress");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .ValueGeneratedOnUpdateSometimes()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PickupCountry");
+                        });
+
+                    b.ComplexProperty<Dictionary<string, object>>("RentalPeriod", "Morent.Core.MorentRentalAggregate.MorentRental.RentalPeriod#DateRange", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<DateTime>("End")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTime>("Start")
+                                .HasColumnType("TEXT");
+                        });
+
+                    b.ComplexProperty<Dictionary<string, object>>("TotalCost", "Morent.Core.MorentRentalAggregate.MorentRental.TotalCost#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("CostAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CostCurrency");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("MorentCarId");
+
+                    b.HasIndex("PaymentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Rentals");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentReviewAggregate.MorentReview", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -55,225 +372,6 @@ namespace Morent.Infrastructure.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCar", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("FuelType")
-                        .HasMaxLength(30)
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Images")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LicensePlate")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("INTEGER");
-
-                    b.ComplexProperty<Dictionary<string, object>>("CurrentLocation", "Morent.Core.MorentCarAggregate.MorentCar.CurrentLocation#Location", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("ZipCode")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-                        });
-
-                    b.ComplexProperty<Dictionary<string, object>>("PricePerDay", "Morent.Core.MorentCarAggregate.MorentCar.PricePerDay#Money", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("PriceAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("TEXT")
-                                .HasColumnName("PriceCurrency");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Cars");
-                });
-
-            modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CarId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("MorentCarId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
-
-                    b.ComplexProperty<Dictionary<string, object>>("DropoffLocation", "Morent.Core.MorentRentalAggregate.MorentRental.DropoffLocation#Location", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("TEXT")
-                                .HasColumnName("DropoffAddress");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("DropoffLatitude");
-
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("DropoffLongitude");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("ZipCode")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-                        });
-
-                    b.ComplexProperty<Dictionary<string, object>>("PickupLocation", "Morent.Core.MorentRentalAggregate.MorentRental.PickupLocation#Location", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("TEXT")
-                                .HasColumnName("PickupAddress");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("PickupLatitude");
-
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("PickupLongitude");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("ZipCode")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-                        });
-
-                    b.ComplexProperty<Dictionary<string, object>>("RentalPeriod", "Morent.Core.MorentRentalAggregate.MorentRental.RentalPeriod#DateRange", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<DateTime>("End")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<DateTime>("Start")
-                                .HasColumnType("TEXT");
-                        });
-
-                    b.ComplexProperty<Dictionary<string, object>>("TotalCost", "Morent.Core.MorentRentalAggregate.MorentRental.TotalCost#Money", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("CostAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("TEXT")
-                                .HasColumnName("CostCurrency");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CarId");
-
-                    b.HasIndex("MorentCarId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Rentals");
-                });
-
             modelBuilder.Entity("Morent.Core.MorentUserAggregate.MorentUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -298,13 +396,13 @@ namespace Morent.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ProfileImageUrl")
-                        .HasMaxLength(500)
+                    b.Property<Guid?>("ProfileImageId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Role")
+                    b.Property<string>("Role")
+                        .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -323,10 +421,72 @@ namespace Morent.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProfileImageId");
+
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Morent.Core.Entities.MorentReview", b =>
+            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCar", b =>
+                {
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCarModel", "CarModel")
+                        .WithMany()
+                        .HasForeignKey("CarModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarModel");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCarImage", b =>
+                {
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
+                        .WithMany("Images")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Morent.Core.MediaAggregate.MorentImage", null)
+                        .WithMany()
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentPaymentAggregate.MorentPayment", b =>
+                {
+                    b.HasOne("Morent.Core.MorentRentalAggregate.MorentRental", null)
+                        .WithOne()
+                        .HasForeignKey("Morent.Core.MorentPaymentAggregate.MorentPayment", "RentalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
+                {
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
+                        .WithMany("Rentals")
+                        .HasForeignKey("MorentCarId");
+
+                    b.HasOne("Morent.Core.MorentPaymentAggregate.MorentPayment", "Payment")
+                        .WithMany()
+                        .HasForeignKey("PaymentId");
+
+                    b.HasOne("Morent.Core.MorentUserAggregate.MorentUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentReviewAggregate.MorentReview", b =>
                 {
                     b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
                         .WithMany()
@@ -345,27 +505,13 @@ namespace Morent.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
-                {
-                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
-                        .WithMany()
-                        .HasForeignKey("CarId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
-                        .WithMany("Rentals")
-                        .HasForeignKey("MorentCarId");
-
-                    b.HasOne("Morent.Core.MorentUserAggregate.MorentUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Morent.Core.MorentUserAggregate.MorentUser", b =>
                 {
+                    b.HasOne("Morent.Core.MediaAggregate.MorentImage", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.OwnsMany("Morent.Core.MorentUserAggregate.MorentUserOAuthLogin", "OAuthLogins", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -439,6 +585,8 @@ namespace Morent.Infrastructure.Migrations
 
             modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCar", b =>
                 {
+                    b.Navigation("Images");
+
                     b.Navigation("Rentals");
 
                     b.Navigation("Reviews");

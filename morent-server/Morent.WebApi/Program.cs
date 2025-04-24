@@ -41,6 +41,6 @@ builder.Services.AddServiceConfigs(appLogger, builder);
 
 var app = builder.Build();
 
-app.UseMiddleware();
+await app.UseMiddleware();
 
 app.Run();
