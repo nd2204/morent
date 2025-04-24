@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Morent.Application.Repositories;
-using Morent.Core.Entities;
+using Morent.Core.MorentReviewAggregate;
 
 namespace Morent.Infrastructure.Data.Repositories;
 

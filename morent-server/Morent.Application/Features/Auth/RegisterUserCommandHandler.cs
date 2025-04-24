@@ -4,16 +4,13 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, A
 {
   private readonly IUserRepository _userRepository;
   private readonly IAuthService _authService;
-  // private readonly IUnitOfWork _unitOfWork;
 
   public RegisterUserCommandHandler(
       IUserRepository userRepository,
-      // IUnitOfWork unitOfWork,
       IAuthService authService)
   {
     _userRepository = userRepository;
     _authService = authService;
-    // _unitOfWork = unitOfWork;
   }
 
   public async Task<AuthResponse> Handle(RegisterUserCommand command, CancellationToken cancellationToken)

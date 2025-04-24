@@ -1,3 +1,7 @@
+using Morent.Application.Interfaces;
+using Morent.Core.MediaAggregate;
+using Morent.Core.ValueObjects;
+
 namespace Morent.Infrastructure.Data.Configs;
 
 public class MorentUserConfiguration : IEntityTypeConfiguration<MorentUser>
@@ -5,10 +9,23 @@ public class MorentUserConfiguration : IEntityTypeConfiguration<MorentUser>
     public void Configure(EntityTypeBuilder<MorentUser> builder)
     {
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Name).IsRequired().HasMaxLength(100);
-        builder.Property(e => e.PasswordHash).HasMaxLength(256);
-        builder.Property(e => e.Role).IsRequired().HasMaxLength(20);
-        builder.Property(e => e.ProfileImageUrl).HasMaxLength(500);
+
+        builder.Property(e => e.Name)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(e => e.PasswordHash)
+            .HasMaxLength(256);
+
+        builder.Property(e => e.Role)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.HasOne<MorentImage>()
+            .WithMany()
+            .HasForeignKey(e => e.ProfileImageId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Configure Email Value Object
         builder.ComplexProperty(u => u.Email, email =>

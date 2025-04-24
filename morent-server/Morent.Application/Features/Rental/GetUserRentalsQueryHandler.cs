@@ -1,3 +1,6 @@
+using Morent.Application.Extensions;
+using Morent.Core.Exceptions;
+
 namespace Morent.Application.Features.Rental;
 
 public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEnumerable<RentalDto>>
@@ -27,34 +30,16 @@ public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEn
     {
       var car = await _carRepository.GetByIdAsync(rental.CarId, cancellationToken);
 
+      if (car == null) throw new DomainException($"Car with Id={rental.CarId} not found!");
+
       rentalDtos.Add(new RentalDto
       {
         Id = rental.Id,
-        CarId = rental.CarId,
-        CarBrand = car?.Brand ?? "Unknown",
-        CarModel = car?.Model ?? "Unknown",
+        CarInfo = car.ToCarDto(),
         PickupDate = rental.RentalPeriod.Start,
         DropoffDate = rental.RentalPeriod.End,
-        PickupLocation = new LocationDto
-        {
-          Address = rental.PickupLocation.Address,
-          City = rental.PickupLocation.City,
-          State = rental.PickupLocation.State,
-          ZipCode = rental.PickupLocation.ZipCode,
-          Country = rental.PickupLocation.Country,
-          Latitude = rental.PickupLocation.Latitude,
-          Longitude = rental.PickupLocation.Longitude
-        },
-        DropoffLocation = new LocationDto
-        {
-          Address = rental.DropoffLocation.Address,
-          City = rental.DropoffLocation.City,
-          State = rental.DropoffLocation.State,
-          ZipCode = rental.DropoffLocation.ZipCode,
-          Country = rental.DropoffLocation.Country,
-          Latitude = rental.DropoffLocation.Latitude,
-          Longitude = rental.DropoffLocation.Longitude
-        },
+        PickupLocation = rental.PickupLocation.ToDto(),
+        DropoffLocation = rental.DropoffLocation.ToDto(),
         TotalCost = rental.TotalCost.Amount,
         Currency = rental.TotalCost.Currency,
         Status = rental.Status,

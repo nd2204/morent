@@ -1,3 +1,5 @@
+using Morent.Core.MorentUserAggregate.Events;
+
 namespace Morent.Core.MorentUserAggregate;
 
 public class MorentUser : EntityBase<Guid>, IAggregateRoot
@@ -7,7 +9,7 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     public string Username { get; private set; }
     public string? PasswordHash { get; private set; }
     public MorentUserRole Role { get; private set; }
-    public string? ProfileImageUrl { get; private set; }
+    public Guid? ProfileImageId { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
@@ -54,16 +56,42 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
         return Result.Success(user);
     }
 
-    public Result UpdateProfile(string name, string? profileImageUrl)
+    public static Result<MorentUser> CreateAdmin(string? name, string username, Email email, string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return Result.Invalid(new ValidationError("User", "Username cannot be empty."));
+
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            return Result.Invalid(new ValidationError("User", "Password hash cannot be empty."));
+
+        var user = new MorentUser(name, username, email, passwordHash, MorentUserRole.Admin);
+        user.PasswordHash = passwordHash;
+
+        user.RegisterDomainEvent(new UserCreatedEvent(user.Id));
+
+        return Result.Success(user);
+    }
+
+    public Result UpdateProfile(string name, Guid? profileImageId)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Invalid(new ValidationError("User", "Name cannot be empty."));
 
         Name = name;
-        ProfileImageUrl = profileImageUrl;
+        ProfileImageId = profileImageId;
         //   UpdateModifiedDate();
 
         return Result.Success();
+    }
+
+    public void SetPrimaryImage(Guid? imageId)
+    {
+        ProfileImageId = imageId;
+    }
+
+    public void RemoveProfileImage()
+    {
+        ProfileImageId = null;
     }
 
     public Result ChangePassword(string currentPasswordHash, string newPasswordHash)

@@ -1,13 +1,15 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Morent.Application.DTOs;
-using Morent.Application.Features;
 using Morent.Application.Features.Auth;
+using Morent.Application.Features.Auth.DTOs;
 
-namespace Morent.Api.Controllers;
+namespace Morent.WebApi.Controllers;
 [Route("api/auth")]
 [ApiController]
 public class AuthController : ControllerBase
@@ -106,28 +108,52 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("refreshToken", token, cookieOptions);
     }
 
-    [HttpPost("oauth")]
-    public async Task<ActionResult<AuthResponse>> ExternalLogin([FromBody] OAuthLoginRequest request)
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
     {
-        try
+        var properties = new AuthenticationProperties
         {
-            var command = new OAuthLoginCommand(request.Provider, request.ProviderToken);
+            RedirectUri = Url.Action(nameof(GoogleCallback), "auth", null, Request.Scheme),
+            Items = { { "scheme", GoogleDefaults.AuthenticationScheme }
+            }
+        };
 
-            var response = await _mediator.Send(command);
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
 
-            // Set refresh token in HttpOnly cookie
-            SetRefreshTokenCookie(response.RefreshToken);
+    [HttpGet("google-callback")]
+    public async Task<IActionResult> GoogleCallback()
+    {
+        var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        if (!authenticateResult.Succeeded)
+            return BadRequest("Google authentication failed");
+
+        // Extract user info from the Google claims
+        var userEmail = authenticateResult.Principal.FindFirstValue(ClaimTypes.Email);
+        var firstName = authenticateResult.Principal.FindFirstValue(ClaimTypes.GivenName);
+        var lastName = authenticateResult.Principal.FindFirstValue(ClaimTypes.Surname);
+        var googleId = authenticateResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Get the access token provided by Google (for calls to Google APIs)
+        var accessToken = authenticateResult.Properties.GetTokenValue("access_token");
+        var idToken = authenticateResult.Properties.GetTokenValue("id_token")!;
+
+        // Process the external login using your application's logic
+        var command = new OAuthLoginCommand("Google", idToken);
+        // Use your mediator to handle the command
+        var authResponse = await _mediator.Send(command);
+
+        // Set refresh token in cookie
+        SetRefreshTokenCookie(authResponse.RefreshToken);
+
+        // Sign in with cookie authentication
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            authenticateResult.Principal,
+            authenticateResult.Properties);
+
+        return Ok();
     }
 
     [Authorize]
@@ -136,7 +162,7 @@ public class AuthController : ControllerBase
     {
         // Get user ID from claims
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        logger_.LogWarning("{0}", User);
+        logger_.LogWarning("{0}", User.FindFirst(ClaimTypes.NameIdentifier));
 
         if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
             return Unauthorized();

@@ -9,4 +9,4 @@ global using Ardalis.SharedKernel;
 global using Morent.Core.MorentUserAggregate;
 global using Morent.Core.MorentCarAggregate;
 global using Morent.Core.MorentRentalAggregate;
-global using Morent.Core.Entities;
+global using Morent.Core.MorentReviewAggregate;

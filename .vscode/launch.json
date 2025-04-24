@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/Morent.Api/bin/Debug/net9.0/Morent.Api.dll",
+      "program": "${workspaceFolder}/morent-server/Morent.WebApi/bin/Debug/net9.0/Morent.WebApi.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Morent.Api",
+      "cwd": "${workspaceFolder}/morent-server/Morent.WebApi",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",

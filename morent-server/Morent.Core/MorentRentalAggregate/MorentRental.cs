@@ -1,4 +1,6 @@
-﻿namespace Morent.Core.MorentRentalAggregate;
+﻿using Morent.Core.MorentPaymentAggregate;
+
+namespace Morent.Core.MorentRentalAggregate;
 
 public class MorentRental : EntityBase<Guid>, IAggregateRoot
 {
@@ -10,6 +12,7 @@ public class MorentRental : EntityBase<Guid>, IAggregateRoot
   public Money TotalCost { get; private set; }
   public MorentRentalStatus Status { get; private set; }
   public DateTime CreatedAt { get; private set; }
+  public MorentPayment? Payment { get; private set; }
 
   private MorentRental() { }
 

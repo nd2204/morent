@@ -6,16 +6,16 @@ public class CancelRentalCommandHandler : ICommandHandler<CancelRentalCommand, b
 {
   private readonly IRentalRepository _rentalRepository;
   private readonly IPaymentService _paymentService;
-  // private readonly IUnitOfWork _unitOfWork;
+  private readonly IUnitOfWork _unitOfWork;
 
   public CancelRentalCommandHandler(
       IRentalRepository rentalRepository,
-      // IUnitOfWork unitOfWork,
+      IUnitOfWork unitOfWork,
       IPaymentService paymentService)
   {
     _rentalRepository = rentalRepository;
     _paymentService = paymentService;
-    // _unitOfWork = unitOfWork;
+    _unitOfWork = unitOfWork;
   }
 
   public async Task<bool> Handle(CancelRentalCommand command, CancellationToken cancellationToken)
@@ -38,8 +38,7 @@ public class CancelRentalCommandHandler : ICommandHandler<CancelRentalCommand, b
       // await _paymentService.RefundPaymentAsync(paymentId);
     }
 
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
-    await _rentalRepository.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return true;
   }

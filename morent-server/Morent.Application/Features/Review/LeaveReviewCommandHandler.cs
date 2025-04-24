@@ -7,18 +7,18 @@ public class LeaveReviewCommandHandler : ICommandHandler<LeaveReviewCommand, Gui
   private readonly IReviewRepository _reviewRepository;
   private readonly IRentalRepository _rentalRepository;
   private readonly ICarRepository _carRepository;
-  // private readonly IUnitOfWork _unitOfWork;
+  private readonly IUnitOfWork _unitOfWork;
 
   public LeaveReviewCommandHandler(
       IReviewRepository reviewRepository,
       IRentalRepository rentalRepository,
-      // IUnitOfWork unitOfWork,
+      IUnitOfWork unitOfWork,
       ICarRepository carRepository)
   {
     _reviewRepository = reviewRepository;
     _rentalRepository = rentalRepository;
     _carRepository = carRepository;
-    // _unitOfWork = unitOfWork;
+    _unitOfWork = unitOfWork;
   }
 
   public async Task<Guid> Handle(LeaveReviewCommand command, CancellationToken cancellationToken)
@@ -48,8 +48,7 @@ public class LeaveReviewCommandHandler : ICommandHandler<LeaveReviewCommand, Gui
     // Add domain event
     // var domainEvent = new ReviewAddedEvent(reviewId, command.CarId, userId, command.Rating);
 
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
-    await _carRepository.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return review.Value.Id;
   }

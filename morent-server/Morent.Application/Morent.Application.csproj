@@ -17,8 +17,4 @@
     <ProjectReference Include="../Morent.Core/Morent.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions/" />
-  </ItemGroup>
-
 </Project>

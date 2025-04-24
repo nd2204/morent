@@ -6,13 +6,13 @@ namespace Morent.Application.Features.Rental;
 public class ActivateRentalCommandHandler : ICommandHandler<ActivateRentalCommand, bool>
 {
   private readonly IRentalRepository _rentalRepository;
-  // private readonly IUnitOfWork _unitOfWork;
+  private readonly IUnitOfWork _unitOfWork;
 
   public ActivateRentalCommandHandler(
-      // IUnitOfWork unitOfWork,
+      IUnitOfWork unitOfWork,
       IRentalRepository rentalRepository)
   {
-    // _unitOfWork = unitOfWork;
+    _unitOfWork = unitOfWork;
     _rentalRepository = rentalRepository;
   }
 
@@ -24,8 +24,7 @@ public class ActivateRentalCommandHandler : ICommandHandler<ActivateRentalComman
 
     rental.ConfirmRental();
     await _rentalRepository.UpdateAsync(rental, cancellationToken);
-    await _rentalRepository.SaveChangesAsync(cancellationToken);
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return true;
   }

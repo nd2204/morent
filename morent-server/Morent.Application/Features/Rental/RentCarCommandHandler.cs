@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.ConstrainedExecution;
+using Morent.Application.Extensions;
 
 namespace Morent.Application.Features.Rental;
 
@@ -9,19 +10,19 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
   private readonly ICarRepository _carRepository;
   private readonly IRentalRepository _rentalRepository;
   private readonly IPaymentService _paymentService;
-  // private readonly IUnitOfWork _unitOfWork;
+  private readonly IUnitOfWork _unitOfWork;
 
   public RentCarCommandHandler(
       ICarRepository carRepository,
       IRentalRepository rentalRepository,
-      // IUnitOfWork unitOfWork,
+      IUnitOfWork unitOfWork,
       IPaymentService paymentService
       )
   {
     _carRepository = carRepository;
     _rentalRepository = rentalRepository;
     _paymentService = paymentService;
-    // _unitOfWork = unitOfWork;
+    _unitOfWork = unitOfWork;
   }
 
   public async Task<Guid> Handle(RentCarCommand command, CancellationToken cancellationToken)
@@ -44,23 +45,8 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
       throw new ApplicationException("Car is not available for the selected dates");
 
     // Create pickup and dropoff locations
-    var pickupLocation = new Location(
-        command.PickupLocation.Address,
-        command.PickupLocation.City,
-        command.PickupLocation.State,
-        command.PickupLocation.ZipCode,
-        command.PickupLocation.Country,
-        command.PickupLocation.Latitude,
-        command.PickupLocation.Longitude);
-
-    var dropoffLocation = new Location(
-        command.DropoffLocation.Address,
-        command.DropoffLocation.City,
-        command.DropoffLocation.State,
-        command.DropoffLocation.ZipCode,
-        command.DropoffLocation.Country,
-        command.DropoffLocation.Latitude,
-        command.DropoffLocation.Longitude);
+    var pickupLocation = command.PickupLocation.ToEntity();
+    var dropoffLocation = command.DropoffLocation.ToEntity();
 
     // Calculate total cost
     var durationDays = rentalPeriod.Value.TotalDays();
@@ -93,8 +79,7 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
     await _carRepository.UpdateAsync(car, cancellationToken);
 
     // Add domain event
-    await _carRepository.SaveChangesAsync(cancellationToken);
-    // await _unitOfWork.SaveChangesAsync(cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
     return rentalId;
   }
