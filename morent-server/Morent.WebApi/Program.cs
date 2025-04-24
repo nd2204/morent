@@ -41,15 +41,6 @@ builder.Services.AddServiceConfigs(appLogger, builder);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-app.UseHsts();
-app.MapControllers();
 app.UseMiddleware();
 
 app.Run();

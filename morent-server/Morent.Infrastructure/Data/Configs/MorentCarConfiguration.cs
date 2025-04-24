@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Morent.Core.Entities;
+using System;
 
 namespace Morent.Infrastructure.Data.Configs;
 
@@ -8,15 +6,32 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
 {
   public void Configure(EntityTypeBuilder<MorentCar> builder)
   {
-    // Car relationships
+    builder.HasKey(e => e.Id);
+    builder.Property(e => e.Brand).IsRequired().HasMaxLength(50);
+    builder.Property(e => e.Model).IsRequired().HasMaxLength(100);
+    builder.Property(e => e.FuelType).IsRequired().HasMaxLength(30);
+    builder.Property(e => e.Capacity).IsRequired();
 
-    // Auto increment
-    builder.Property(c => c.Id)
-        .ValueGeneratedOnAdd();
+    // Configure Money Value Object
+    builder.ComplexProperty(c => c.PricePerDay, price =>
+    {
+      price.Property(p => p.Amount)
+        .HasColumnName("PriceAmount")
+        .HasColumnType("decimal(18,2)")
+        .IsRequired();
 
-    builder.HasOne(c => c.CarModel)
-        .WithMany(m => m.Cars)
-        .HasForeignKey(c => c.CarModelId)
-        .OnDelete(DeleteBehavior.Restrict);
+      price.Property(p => p.Currency)
+        .HasColumnName("PriceCurrency")
+        .HasMaxLength(3)
+        .IsRequired();
+    });
+
+    builder.ComplexProperty(c => c.CurrentLocation, c => { c.IsRequired(); });
+
+    // Configure Images collection
+    builder.Property(e => e.Images)
+      .HasConversion(
+        v => string.Join(',', v),
+        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
   }
 }

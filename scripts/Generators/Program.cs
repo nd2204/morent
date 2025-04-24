@@ -21,7 +21,7 @@ public class Program
     Console.WriteLine("[0] Do nothing and exit");
     Console.WriteLine("[1] Generate TypeScript interfaces");
     Console.WriteLine("[2] Generate missing entities configuration classes");
-    Console.WriteLine("[3] Generate missing entities configuration classes");
+    Console.WriteLine("[3] Generate random hex string");
     Console.Write("Enter your choice (default [1]): ");
     string? input = Console.ReadLine() ?? "";
     int choice = Convert.ToInt32(input == "" ? "1" : input);

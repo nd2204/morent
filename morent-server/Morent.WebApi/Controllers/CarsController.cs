@@ -1,107 +1,97 @@
-using System.Collections;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Morent.Core.Entities;
-using Morent.Infrastructure.Data;
+// using Microsoft.AspNetCore.Mvc;
+// using Microsoft.EntityFrameworkCore;
+// using Morent.Api.Helpers;
+// using Morent.Application.Features.MorentCarModel;
+// using Morent.Infrastructure.Data;
 
-namespace Morent.Api.Controllers;
+// namespace Morent.Api.Controllers;
+// using CarModelIdType = int;
 
-[Route("api/[controller]")]
-[ApiController]
-// [Authorize (Roles = "Admin")]
-public class CarsController : ControllerBase
-{
-    private readonly MorentDbContext _context;
-    private readonly ILogger<CarsController> _logger;
+// [Route("api/cars")]
+// [ApiController]
+// public class CarsController : ControllerBase
+// {
+//     private readonly MorentDbContext _context;
+//     private readonly ILogger<CarsController> _logger;
 
-    public CarsController(MorentDbContext context, ILogger<CarsController> logger)
-    {
-        _context = context;
-        _logger = logger;
-    }
+//     public CarsController(MorentDbContext context, ILogger<CarsController> logger)
+//     {
+//         _context = context;
+//         _logger = logger;
+//     }
 
-    // GET: /api/cars
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<MorentCar>>> GetCars()
-    {
-        return await _context.Cars
-            .Include(c => c.CarModel)
-            .ToListAsync();
-    }
+//     // GET: /api/car-models
+//     [HttpGet]
+//     public async Task<ActionResult<IEnumerable<MorentCarDto>>> GetCarModels()
+//     {
+//         return await _context.CarModels
+//             .ToListAsync();
+//     }
 
+//     // GET: /api/car-models/{carModelId}/images
+//     [HttpGet("{carModelId}/images")]
+//     public async Task<ActionResult<IEnumerable<MorentImage>>> GetCarModelImages(CarModelIdType carModelId)
+//     {
+//         return await _context.Images
+//             .ToListAsync();
+//     }
 
-    // GET: /api/cars/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<MorentCar>> GetCar(int id)
-    {
-        var car = await _context.Cars
-            .Include(c => c.CarModel)
-            .FirstOrDefaultAsync(c => c.Id == id);
+//     // GET: /api/car-models/{carModelId}/images/{imageId}
+//     [HttpGet("{carModelId}/images/{imageId}")]
+//     public async Task<ActionResult<MorentImage>> GetCarModelImage(CarModelIdType carModelId, Guid imageId) 
+//     {
+//         var car = await _context.Images
+//             .FirstOrDefaultAsync(i => i.Id == imageId);
 
-        if (car == null)
-        {
-            return NotFound();
-        }
+//         if (car == null)
+//         {
+//             return NotFound();
+//         }
 
-        return car;
-    }
+//         return car;
+//     }
 
-    // POST: /api/cars
-    [HttpPost]
-    public async Task<ActionResult<MorentCar>> CreateCar(MorentCar car)
-    {
-        _context.Cars.Add(car);
-        await _context.SaveChangesAsync();
+//     // POST: /api/car-models/{carId}/images
+//     // [Authorize(Roles = "Admin")]
+//     [HttpPost("{carModelId}/images")]
+//     public async Task<IActionResult> UploadImage(CarModelIdType carModelId, IFormFile file)
+//     {
+//         if (file == null || file.Length == 0)
+//             return BadRequest("No file uploaded.");
 
-        return CreatedAtAction(nameof(GetCar), new { id = car.Id }, car);
-    }
+//         var car = await _context.CarModels.FindAsync(carModelId);
+//         if (car == null) return NotFound("Car not found.");
 
-    // PUT: /api/cars/{id}
-    [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateCar(int id, MorentCar car)
-    {
-        if (id != car.Id)
-        {
-            return BadRequest();
-        }
+//         try
+//         {
+//             var (fileName, _) = await FileHelper.SaveImageFileAsync(file);
 
-        try
-        {
-            _context.Cars.Update(car);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!await CarExists(id))
-            {
-                return NotFound();
-            }
-            throw;
-        }
+//             var image = new MorentImage
+//             {
+//                 FileName = fileName,
+//                 Url = $"/images/{fileName}",
+//                 CarModelId = carModelId
+//             };
 
-        return NoContent();
-    }
+//             _context.Images.Add(image);
+//             await _context.SaveChangesAsync();
 
-    private async Task<bool> CarExists(int id)
-    {
-        return await _context.Cars.AnyAsync(e => e.Id == id);
-    }
+//             return Ok(new { image.Id, image.Url });
+//         }
+//         catch (Exception ex)
+//         {
+//             _logger.LogError(ex, "Error saving image file.");
+//             return StatusCode(500, "Internal server error while saving the image.");
+//         }
+//     }
 
-    // Delete: /api/cars/{id}
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCar(int id)
-    {
-        var car = await _context.Cars.FindAsync(id);
-        if (car == null)
-        {
-            return NotFound();
-        }
+//     private async Task<bool> CarModelImageExists(Guid imageId)
+//     {
+//         return await _context.Images.AnyAsync(i => i.Id == imageId);
+//     }
 
-        _context.Cars.Remove(car);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-}
+//     private async Task<bool> CarModelExists(int carModelId)
+//     {
+//         return await _context.CarModels.AnyAsync(i => i.Id == carModelId);
+//     }
+// }

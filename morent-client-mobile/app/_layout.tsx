@@ -1,59 +1,69 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import '~/global.css';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import * as React from 'react';
+import { Platform } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NAV_THEME } from '~/lib/constants';
+import { useColorScheme } from '~/lib/useColorScheme';
+import { PortalHost } from '@rn-primitives/portal';
+import { setAndroidNavigationBar } from '~/lib/android-navigation-bar';
+
+const LIGHT_THEME: Theme = {
+  ...DefaultTheme,
+  colors: NAV_THEME.light,
+};
+const DARK_THEME: Theme = {
+  ...DarkTheme,
+  colors: NAV_THEME.dark,
+};
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
+  const hasMounted = React.useRef(false);
+  const { colorScheme, isDarkColorScheme } = useColorScheme();
+  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+  useIsomorphicLayoutEffect(() => {
+    if (hasMounted.current) {
+      return;
     }
-  }, [loaded]);
 
-  if (!loaded) {
+    if (Platform.OS === 'web') {
+      // Adds the background color to the html element to prevent white background on overscroll.
+      document.documentElement.classList.add('bg-background');
+    }
+    setAndroidNavigationBar(colorScheme);
+    setIsColorSchemeLoaded(true);
+    hasMounted.current = true;
+  }, []);
+
+  if (!isColorSchemeLoaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+        <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
+        <Stack screenOptions={{
+          headerShown: false,
+        }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="payment" />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack>
+        <PortalHost />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
+
+const useIsomorphicLayoutEffect =
+  Platform.OS === 'web' && typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;

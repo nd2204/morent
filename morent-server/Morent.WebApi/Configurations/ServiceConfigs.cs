@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using  Microsoft.OpenApi.Models;
+using Morent.Core;
 using Morent.Infrastructure;
 
 namespace Morent.WebApi.Configurations;
@@ -15,11 +16,9 @@ public static class ServiceConfig
     WebApplicationBuilder builder
   )
   {
-    logger.LogInformation("Registering WebApi services");
-
     services
-      .AddAuthorization()
       .AddInfrastructureServices(logger, builder.Configuration)
+      .AddCoreServices(logger)
       .AddMediatrConfigs()
       .AddJwtConfigs(builder.Configuration)
       .AddCors(options =>
@@ -28,9 +27,18 @@ public static class ServiceConfig
           builder => builder.WithOrigins("http://localhost:3000") // React app URL
             .AllowAnyMethod()
             .AllowAnyHeader());
-      });
+      })
+      .AddCors(options =>
+      {
+        options.AddPolicy("All", builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+      })
+      .AddAuthorization()
+      ;
 
-    logger.LogInformation("{Project} services registered", "WebApi");
+    logger.LogInformation("{Project} registered", "WebApi services");
 
     return services;
   }
