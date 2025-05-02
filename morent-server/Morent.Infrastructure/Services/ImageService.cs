@@ -183,6 +183,7 @@ public class ImageService : IImageService
     };
   }
 
+
   public async Task<string> DetermineImageFileNameAsync(string imageUrl)
   {
     var response = await _httpClient.GetAsync(imageUrl, HttpCompletionOption.ResponseHeadersRead);

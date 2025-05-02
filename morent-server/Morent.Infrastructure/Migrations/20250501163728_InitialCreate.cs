@@ -6,38 +6,70 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Morent.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "CarModels",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Brand = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ModelName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Year = table.Column<int>(type: "INTEGER", nullable: false),
+                    FuelType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Gearbox = table.Column<int>(type: "INTEGER", maxLength: 50, nullable: false),
+                    FuelTankCapacity = table.Column<int>(type: "INTEGER", nullable: false),
+                    SeatCapacity = table.Column<int>(type: "INTEGER", nullable: false),
+                    CarType = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CarModels", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Images",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    FileName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    ContentType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Path = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Size = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Images", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Cars",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Brand = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Model = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Year = table.Column<int>(type: "INTEGER", nullable: false),
+                    CarModelId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LicensePlate = table.Column<string>(type: "TEXT", nullable: false),
-                    Capacity = table.Column<int>(type: "INTEGER", nullable: false),
-                    FuelType = table.Column<int>(type: "INTEGER", maxLength: 30, nullable: false),
                     IsAvailable = table.Column<bool>(type: "INTEGER", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
-                    Images = table.Column<string>(type: "TEXT", nullable: false),
                     CurrentLocation_Address = table.Column<string>(type: "TEXT", nullable: false),
                     CurrentLocation_City = table.Column<string>(type: "TEXT", nullable: false),
                     CurrentLocation_Country = table.Column<string>(type: "TEXT", nullable: false),
-                    CurrentLocation_Latitude = table.Column<double>(type: "REAL", nullable: true),
-                    CurrentLocation_Longitude = table.Column<double>(type: "REAL", nullable: true),
-                    CurrentLocation_State = table.Column<string>(type: "TEXT", nullable: false),
-                    CurrentLocation_ZipCode = table.Column<string>(type: "TEXT", nullable: false),
                     PriceAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PriceCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cars", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Cars_CarModels_CarModelId",
+                        column: x => x.CarModelId,
+                        principalTable: "CarModels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -48,8 +80,8 @@ namespace Morent.Infrastructure.Migrations
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Username = table.Column<string>(type: "TEXT", nullable: false),
                     PasswordHash = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Role = table.Column<int>(type: "INTEGER", maxLength: 20, nullable: false),
-                    ProfileImageUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Role = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    ProfileImageId = table.Column<Guid>(type: "TEXT", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastLoginAt = table.Column<DateTime>(type: "TEXT", nullable: true),
@@ -58,6 +90,39 @@ namespace Morent.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Images_ProfileImageId",
+                        column: x => x.ProfileImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CarImages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CarId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ImageId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CarImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CarImages_Cars_CarId",
+                        column: x => x.CarId,
+                        principalTable: "Cars",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CarImages_Images_ImageId",
+                        column: x => x.ImageId,
+                        principalTable: "Images",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -167,20 +232,9 @@ namespace Morent.Infrastructure.Migrations
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PaymentId = table.Column<Guid>(type: "TEXT", nullable: true),
                     MorentCarId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DropoffAddress = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    DropoffLocation_City = table.Column<string>(type: "TEXT", nullable: false),
-                    DropoffLocation_Country = table.Column<string>(type: "TEXT", nullable: false),
-                    DropoffLatitude = table.Column<double>(type: "REAL", nullable: true),
-                    DropoffLongitude = table.Column<double>(type: "REAL", nullable: true),
-                    DropoffLocation_State = table.Column<string>(type: "TEXT", nullable: false),
-                    DropoffLocation_ZipCode = table.Column<string>(type: "TEXT", nullable: false),
-                    PickupAddress = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    PickupLocation_City = table.Column<string>(type: "TEXT", nullable: false),
-                    PickupLocation_Country = table.Column<string>(type: "TEXT", nullable: false),
-                    PickupLatitude = table.Column<double>(type: "REAL", nullable: true),
-                    PickupLongitude = table.Column<double>(type: "REAL", nullable: true),
-                    PickupLocation_State = table.Column<string>(type: "TEXT", nullable: false),
-                    PickupLocation_ZipCode = table.Column<string>(type: "TEXT", nullable: false),
+                    PickupAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    PickupCity = table.Column<string>(type: "TEXT", nullable: false),
+                    PickupCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     RentalPeriod_End = table.Column<DateTime>(type: "TEXT", nullable: false),
                     RentalPeriod_Start = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CostAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -212,6 +266,27 @@ namespace Morent.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CarImages_CarId",
+                table: "CarImages",
+                column: "CarId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CarImages_ImageId",
+                table: "CarImages",
+                column: "ImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CarModels_Brand_ModelName_Year",
+                table: "CarModels",
+                columns: new[] { "Brand", "ModelName", "Year" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cars_CarModelId",
+                table: "Cars",
+                column: "CarModelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MorentPayment_RentalId",
@@ -275,6 +350,11 @@ namespace Morent.Infrastructure.Migrations
                 table: "Reviews",
                 column: "UserId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_ProfileImageId",
+                table: "Users",
+                column: "ProfileImageId");
+
             migrationBuilder.AddForeignKey(
                 name: "FK_MorentPayment_Rentals_RentalId",
                 table: "MorentPayment",
@@ -288,8 +368,23 @@ namespace Morent.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "FK_Rentals_Cars_CarId",
+                table: "Rentals");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Rentals_Cars_MorentCarId",
+                table: "Rentals");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Users_Images_ProfileImageId",
+                table: "Users");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_MorentPayment_Rentals_RentalId",
                 table: "MorentPayment");
+
+            migrationBuilder.DropTable(
+                name: "CarImages");
 
             migrationBuilder.DropTable(
                 name: "MorentUserOAuthLogin");
@@ -301,10 +396,16 @@ namespace Morent.Infrastructure.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "Rentals");
+                name: "Cars");
 
             migrationBuilder.DropTable(
-                name: "Cars");
+                name: "CarModels");
+
+            migrationBuilder.DropTable(
+                name: "Images");
+
+            migrationBuilder.DropTable(
+                name: "Rentals");
 
             migrationBuilder.DropTable(
                 name: "MorentPayment");

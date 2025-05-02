@@ -1,3 +1,4 @@
+using Morent.Core.MediaAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data.Configs;
 
@@ -9,9 +10,11 @@ public class MorentDbContext(DbContextOptions<MorentDbContext> options) : DbCont
 
   public DbSet<MorentUser> Users => Set<MorentUser>();
   public DbSet<MorentCar> Cars => Set<MorentCar>();
+  public DbSet<MorentCarImage> CarImages => Set<MorentCarImage>();
   public DbSet<MorentCarModel> CarModels => Set<MorentCarModel>();
   public DbSet<MorentRental> Rentals => Set<MorentRental>();
   public DbSet<MorentReview> Reviews => Set<MorentReview>();
+  public DbSet<MorentImage> Images => Set<MorentImage>();
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {

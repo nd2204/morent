@@ -1,22 +1,33 @@
+using Ardalis.SharedKernel;
 using Microsoft.EntityFrameworkCore;
+using Morent.Application.Features.Car.DTOs;
+using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
+using Morent.Core.MediaAggregate;
 using Morent.Core.MorentCarAggregate;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data;
+using Morent.Infrastructure.Services;
 public class SeedData
 {
   private readonly IAuthService _authService;
+  private readonly IImageStorage _imageStorage;
   private readonly IImageService _imageService;
+  private readonly IWebHostEnvironment _env;
   private readonly MorentDbContext _dbContext;
+  private readonly IRepository<MorentImage> _images;
 
   private MorentUser admin1 = null!;
 
-  public SeedData(MorentDbContext context, IAuthService authService, IImageService imageService)
+  public SeedData(MorentDbContext context, IAuthService authService, IImageService imageService, IImageStorage imageStorage, IWebHostEnvironment env, IRepository<MorentImage> images)
   {
     _dbContext = context;
-    _imageService = imageService;
+    _imageStorage = imageStorage;
     _authService = authService;
+    _imageService = imageService;
+    _images = images;
+    _env = env;
   }
 
   private readonly Dictionary<string, MorentCarModel> _carModels = new Dictionary<string, MorentCarModel>
@@ -112,6 +123,8 @@ public class SeedData
       await SeedCars();
       Console.WriteLine("Cars seeded successfully.");
     }
+
+    await SeedCarImages();
   }
 
   private async Task SeedCarModels()
@@ -205,15 +218,158 @@ public class SeedData
         description: description
       );
 
-      // Assign the car to an owner (optional, depends on your model requirements)
-      // car.OwnerId = admin1.Id;
-
       carsList.Add(car);
     }
 
     // Add all cars to the database
     _dbContext.Cars.AddRange(carsList);
     await _dbContext.SaveChangesAsync();
+  }
+
+  // Add this method to your existing SeedData class
+private async Task SeedCarImages()
+{
+    try
+    {
+        // Get all cars IDs only to minimize tracking
+        var carIds = await _dbContext.Cars
+            .Where(c => !c.Images.Any()) // Only cars without images
+            .Select(c => c.Id) // Select just the IDs
+            .ToListAsync();
+
+        if (!carIds.Any())
+        {
+            Console.WriteLine("All cars already have images - skipping image seeding.");
+            return;
+        }
+
+        Console.WriteLine($"Found {carIds.Count} cars without images.");
+
+        // Get image IDs only
+        var imageIds = await _dbContext.Images
+            .Select(i => i.Id)
+            .ToListAsync();
+
+        if (!imageIds.Any())
+        {
+            // Upload new images if none exist
+            var assetPath = Path.Combine(_env.WebRootPath, "SeedData", "uploads");
+            string[] filePaths = Directory.GetFiles(assetPath);
+
+            foreach (var filePath in filePaths)
+            {
+                using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                var response = await _imageService.UploadImageAsync(new ImageUploadRequest
+                {
+                    ImageData = stream,
+                    FileName = Path.GetFileName(filePath),
+                    ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
+                });
+                if (response != null)
+                {
+                    imageIds.Add(response.ImageId);
+                }
+            }
+        }
+
+        if (!imageIds.Any())
+        {
+            Console.WriteLine("No images available for seeding.");
+            return;
+        }
+
+        // Process cars one by one with clear context between operations
+        var random = new Random();
+        int successCount = 0;
+        int failureCount = 0;
+
+        foreach (var carId in carIds)
+        {
+            try
+            {
+                // Clear the change tracker before each operation
+                _dbContext.ChangeTracker.Clear();
+                
+                int index = random.Next(imageIds.Count);
+                var imageId = imageIds[index];
+                
+                // Direct database approach to avoid concurrency issues
+                await AssignCarImageDirectly(carId, imageId);
+                successCount++;
+            }
+            catch (Exception ex)
+            {
+                failureCount++;
+                Console.WriteLine($"Failed to assign image to car ID: {carId}. Error: {ex.Message}");
+            }
+        }
+
+        Console.WriteLine($"Car image seeding completed. Success: {successCount}, Failures: {failureCount}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error seeding car images: {ex.Message}");
+        throw; // Rethrow to allow the calling code to handle it
+    }
+    finally
+    {
+      // await _imageStorage.CleanupOrphanedImages(_images);
+    }
+}
+
+// New method to directly insert car image records
+private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
+{
+    // Check if the car exists
+    bool carExists = await _dbContext.Cars.AnyAsync(c => c.Id == carId);
+    if (!carExists)
+    {
+        throw new ApplicationException($"Car with ID {carId} not found");
+    }
+
+    // Check if the image exists
+    bool imageExists = await _dbContext.Images.AnyAsync(i => i.Id == imageId);
+    if (!imageExists)
+    {
+        throw new ApplicationException($"Image with ID {imageId} not found");
+    }
+
+    // Check if this car already has a primary image
+    bool hasPrimaryImage = await _dbContext.CarImages
+        .AnyAsync(ci => ci.CarId == carId && ci.IsPrimary);
+
+    // Get the next display order
+    int nextDisplayOrder = 1;
+    var maxOrder = await _dbContext.CarImages
+        .Where(ci => ci.CarId == carId)
+        .Select(ci => (int?)ci.DisplayOrder)
+        .MaxAsync() ?? 0;
+    
+    nextDisplayOrder = maxOrder + 1;
+
+    // Create new car image entity directly
+    var carImage = new MorentCarImage(carId, imageId, !hasPrimaryImage, nextDisplayOrder);
+    
+    // If this will be primary and there are existing primary images, update them first
+    if (!hasPrimaryImage)
+    {
+        // This will be the first image, so it will be primary
+        // No need to update other images
+    }
+    
+    // Add the new car image
+    _dbContext.CarImages.Add(carImage);
+    await _dbContext.SaveChangesAsync();
+}
+
+  private static string GetContentTypeFromExtension(string extension)
+  {
+    return extension.ToLower() switch
+    {
+      ".jpg" or ".jpeg" => "image/jpeg",
+      ".png" => "image/png",
+      _ => "application/octet-stream"
+    };
   }
 
   private async Task SeedUser()
