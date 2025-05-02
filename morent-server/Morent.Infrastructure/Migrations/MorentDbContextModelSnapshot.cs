@@ -47,7 +47,7 @@ namespace Morent.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MorentImage");
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCar", b =>
@@ -132,7 +132,7 @@ namespace Morent.Infrastructure.Migrations
 
                     b.HasIndex("ImageId");
 
-                    b.ToTable("MorentCarImage");
+                    b.ToTable("CarImages");
                 });
 
             modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCarModel", b =>

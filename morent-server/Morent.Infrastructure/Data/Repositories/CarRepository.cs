@@ -37,13 +37,17 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
             query = query.Where(c => c.CarModel.SeatCapacity >= minCapacity.Value);
         }
 
-        return await query.Include(c => c.CarModel).ToListAsync(cancellationToken);
+        return await query
+            .Include(c => c.CarModel)
+            .Include(c => c.Images)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<MorentCar?> GetCarWithRentalsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Cars
             .Include(c => c.CarModel)
+            .Include(c => c.Images)
             .Include(c => c.Rentals)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
@@ -52,6 +56,7 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
     {
         return await _context.Cars
             .Include(c => c.CarModel)
+            .Include(c => c.Images)
             .Include(c => c.Reviews)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
@@ -60,6 +65,7 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
     {
         return await _context.Cars
             .Include(c => c.CarModel)
+            .Include(c => c.Images)
             .Where(c => c.CarModel.Brand.ToLower() == brand.ToLower())
             .ToListAsync(cancellationToken);
     }
@@ -80,4 +86,12 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
                         year == null ? m.Year == year : true)
             .ToListAsync();
     }
+
+  public async Task<MorentCar?> GetCarWithImagesAsync(Guid id, CancellationToken cancellationToken = default)
+  {
+    return await _context.Cars
+        .Include(c => c.Images)
+        .Where(c => c.Id == id)
+        .SingleOrDefaultAsync();
+  }
 }

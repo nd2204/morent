@@ -1,4 +1,6 @@
+using Ardalis.SharedKernel;
 using Morent.Application.Interfaces;
+using Morent.Core.MediaAggregate;
 using Morent.Infrastructure.Data;
 using Scalar.AspNetCore;
 
@@ -62,11 +64,16 @@ public static class MiddlewareConfig
     try
     {
       var context = services.GetRequiredService<MorentDbContext>();
-      var auth = services.GetRequiredService<IAuthService>();
-      var imageService = services.GetRequiredService<IImageService>();
       //          context.Database.Migrate();
       context.Database.EnsureCreated();
-      await new SeedData(context, auth, imageService).InitializeAsync();
+      await new SeedData(
+        context,
+        services.GetRequiredService<IAuthService>(),
+        services.GetRequiredService<IImageService>(),
+        services.GetRequiredService<IImageStorage>(),
+        services.GetRequiredService<IWebHostEnvironment>(),
+        services.GetRequiredService<IRepository<MorentImage>>()
+      ).InitializeAsync();
     }
     catch (Exception ex)
     {

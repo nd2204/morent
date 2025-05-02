@@ -10,4 +10,5 @@ public interface ICarRepository : IRepository<MorentCar>
   Task<IEnumerable<MorentCar>> GetCarsByModelAsync(string brancd, string modelName, CancellationToken cancellationToken = default);
   Task<MorentCar?> GetCarWithRentalsAsync(Guid id, CancellationToken cancellationToken = default);
   Task<MorentCar?> GetCarWithReviewsAsync(Guid id, CancellationToken cancellationToken = default);
+  Task<MorentCar?> GetCarWithImagesAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -19,16 +19,24 @@ public class EfUnitOfWork : IUnitOfWork
 
   public async Task CommitTransactionAsync()
   {
-    await _context.Database.BeginTransactionAsync();
+    await _context.Database.CommitTransactionAsync();
   }
 
   public async Task RollbackTransactionAsync()
   {
-    await _context.Database.RollbackTransactionAsync();
+    if (_context.Database.CurrentTransaction != null)
+    {
+      await _context.Database.RollbackTransactionAsync();
+    }
   }
 
   public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
   {
+    var entries = _context.ChangeTracker.Entries();
+    foreach (var entry in entries)
+    {
+      Console.WriteLine($"{entry.Entity.GetType().Name} - {entry.State}");
+    }
     return await _context.SaveChangesAsync(cancellationToken);
   }
 }
