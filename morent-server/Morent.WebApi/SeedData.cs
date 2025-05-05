@@ -253,7 +253,7 @@ private async Task SeedCarImages()
         if (!imageIds.Any())
         {
             // Upload new images if none exist
-            var assetPath = Path.Combine(_env.WebRootPath, "SeedData", "uploads");
+            var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "uploads");
             string[] filePaths = Directory.GetFiles(assetPath);
 
             foreach (var filePath in filePaths)
@@ -267,7 +267,7 @@ private async Task SeedCarImages()
                 });
                 if (response != null)
                 {
-                    imageIds.Add(response.ImageId);
+                    imageIds.Add(response.Value.ImageId);
                 }
             }
         }

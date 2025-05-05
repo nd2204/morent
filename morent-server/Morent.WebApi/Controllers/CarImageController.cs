@@ -1,5 +1,6 @@
 namespace Morent.WebApi;
 
+using Ardalis.Result.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,12 +30,6 @@ public class CarImagesController : ControllerBase
   public async Task<ActionResult<IEnumerable<CarImageDto>>> GetCarImages(Guid carId)
   {
     var images = await _carImageService.GetCarImagesAsync(carId);
-
-    if (!images.Any())
-    {
-      return NotFound();
-    }
-
     return Ok(images);
   }
 
@@ -85,13 +80,7 @@ public class CarImagesController : ControllerBase
   public async Task<IActionResult> DeleteCarImage(Guid carId, Guid imageId)
   {
     var result = await _carImageService.DeleteCarImageAsync(carId, imageId);
-
-    if (!result)
-    {
-      return NotFound();
-    }
-
-    return NoContent();
+    return this.ToActionResult(result);
   }
 
   [HttpPut("{imageId}/set-primary")]
@@ -123,18 +112,7 @@ public class CarImagesController : ControllerBase
       Guid carId,
       [FromBody] List<CarImageOrderItem> newOrder)
   {
-    if (newOrder == null || !newOrder.Any())
-    {
-      return BadRequest("No reordering information provided");
-    }
-
     var result = await _carImageService.ReorderCarImagesAsync(carId, newOrder);
-
-    if (!result)
-    {
-      return BadRequest("Failed to reorder images");
-    }
-
-    return Ok();
+    return this.ToActionResult(result);
   }
 }

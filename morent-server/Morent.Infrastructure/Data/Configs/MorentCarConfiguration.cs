@@ -27,6 +27,9 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
     });
 
     builder.ComplexProperty(c => c.CurrentLocation, c => { c.IsRequired(); });
+    builder
+    .Navigation(c => c.CarModel)
+    .AutoInclude();
 
     // Configure Images collection
     builder.HasMany(e => e.Images)

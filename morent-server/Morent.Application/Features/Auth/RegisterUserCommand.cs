@@ -6,4 +6,4 @@ public record class RegisterUserCommand(
   string? Name,
   string Username,
   string Email,
-  string Password) : ICommand<AuthResponse>;
+  string Password) : ICommand<Result<AuthResponse>>;

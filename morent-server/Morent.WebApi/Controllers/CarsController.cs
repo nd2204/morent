@@ -1,4 +1,5 @@
 using Ardalis.Result;
+using Ardalis.Result.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,18 +30,24 @@ public class CarsController : ControllerBase
   }
 
   [HttpGet]
-  public async Task<ActionResult<PagedResult<CarDto>>> GetCars([FromQuery] GetCarsQuery query)
+  public async Task<ActionResult<IEnumerable<CarDto>>> GetCars([FromQuery] GetCarsQuery query)
   {
     var result = await _mediator.Send(new GetCarsByQuery(query));
-    return Ok(result);
+
+    var pagedInfo = result.PagedInfo;
+    Response.Headers.Append("X-Total-Count", pagedInfo.TotalRecords.ToString());
+    Response.Headers.Append("X-Page-Number", pagedInfo.PageNumber.ToString());
+    Response.Headers.Append("X-Page-Size", pagedInfo.PageSize.ToString());
+    Response.Headers.Append("X-Total-Pages", pagedInfo.TotalPages.ToString());
+
+    return this.ToActionResult(result);
   }
 
   [HttpGet("{id:guid}")]
   public async Task<ActionResult<CarDetailDto>> GetCarById(Guid id)
   {
-    var car = await _mediator.Send(new GetCarByIdQuery(id));
-    if (car == null) return NotFound("Không tìm thấy xe (với id cụ thể)");
-    return Ok(car);
+    var result = await _mediator.Send(new GetCarByIdQuery(id));
+    return this.ToActionResult(result);
   }
 
   // Car CRUD ================================================================================

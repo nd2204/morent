@@ -9,6 +9,7 @@ using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Settings;
 using Morent.Application.Repositories;
 using Morent.Application.Features.Auth.DTOs;
+using Ardalis.Result;
 
 namespace Morent.Infrastructure.Services;
 
@@ -104,17 +105,17 @@ public class AuthService : IAuthService
     };
   }
 
-  public async Task<AuthResponse> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
+  public async Task<Result<AuthResponse>> AuthenticateAsync(LoginRequest request, CancellationToken cancellationToken = default)
   {
     // Find user by email
     var user = await _userRepository.GetByUsernameOrEmail(request.LoginId);
     if (user == null)
-      throw new UnauthorizedAccessException("Invalid email or password");
+      return Result.Invalid(new ValidationError("Invalid username/email or password"));
 
     // Validate password
     bool isPasswordValid = VerifyPassword(request.Password, user.PasswordHash!);
     if (!isPasswordValid)
-      throw new UnauthorizedAccessException("Invalid email or password");
+      return Result.Invalid(new ValidationError("Invalid username/email or password"));
 
     // Generate auth response (access token + refresh token)
     var authResponse = GenerateAuthResponse(user);
@@ -126,17 +127,16 @@ public class AuthService : IAuthService
     // Save the new refresh token
     await _userRepository.UpdateAsync(user);
 
-    return authResponse;
+    return Result.Success(authResponse);
   }
 
-  public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+  public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
   {
     // Validate email is unique
     if (await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken))
-      throw new ApplicationException("Email is already in use");
+      return Result.Conflict("Email is already in use");
 
     // Create the user with hashed password
-    var userId = Guid.NewGuid();
     var passwordHash = HashPassword(request.Password);
     var email = new Core.ValueObjects.Email(request.Email);
 
@@ -154,26 +154,21 @@ public class AuthService : IAuthService
     return await AuthenticateAsync(authRequest, cancellationToken);
   }
 
-  public async Task<MorentUser?> ValidateRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
+  public async Task<Result<MorentUser>> ValidateRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
   {
     if (string.IsNullOrEmpty(token))
-      return null;
+      return Result.Invalid(new ValidationError("Provided token is empty!"));
 
     var user = await _userRepository.GetByRefreshTokenAsync(token);
 
     if (user == null)
-      return null;
+      return Result.Unauthorized("No user associated with this token");
 
     var refreshToken = user.GetActiveRefreshToken(token);
 
     if (refreshToken is null || refreshToken.IsRevoked)
-      return null;
+      return Result.Unauthorized("User has no active refresh tokens");
 
-    return user;
-  }
-
-  public Task<bool> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
-  {
-    throw new NotImplementedException();
+    return Result.Success(user);
   }
 }

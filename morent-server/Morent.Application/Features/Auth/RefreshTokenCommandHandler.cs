@@ -2,7 +2,7 @@ using System;
 
 namespace Morent.Application.Features.Auth;
 
-public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, AuthResponse>
+public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, Result<AuthResponse>>
 {
   private readonly IAuthService _authService;
   private readonly IUserRepository _userRepository;
@@ -13,13 +13,15 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
     _userRepository = userRepository;
   }
 
-  public async Task<AuthResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+  public async Task<Result<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
   {
     // Validate the refresh token
-    var user = await _authService.ValidateRefreshTokenAsync(request.RefreshToken);
+    var result = await _authService.ValidateRefreshTokenAsync(request.RefreshToken);
 
-    if (user is null)
+    if (result is null)
       throw new UnauthorizedAccessException("Invalid refresh token");
+
+    var user = result.Value;
 
     // Revoke the used refresh token
     user.RevokeRefreshToken(request.RefreshToken);
@@ -35,5 +37,4 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
 
     return response;
   }
-
 }
