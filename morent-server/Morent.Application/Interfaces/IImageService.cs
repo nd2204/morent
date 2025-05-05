@@ -4,7 +4,7 @@ namespace Morent.Application.Interfaces;
 
 public interface IImageService
 {
-  Task<ImageUploadResponse> UploadImageAsync(ImageUploadRequest request);
-  Task<bool> DeleteImageAsync(Guid imageId);
-  Task<ImageResult> GetImageByIdAsync(Guid imageId);
+  Task<Result<ImageUploadResponse>> UploadImageAsync(ImageUploadRequest request);
+  Task<Result> DeleteImageAsync(Guid imageId);
+  Task<Result<ImageDto>> GetImageByIdAsync(Guid imageId);
 }

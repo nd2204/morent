@@ -17,4 +17,8 @@
     <ProjectReference Include="../Morent.Core/Morent.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Customer\DTOs\" />
+  </ItemGroup>
+
 </Project>

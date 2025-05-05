@@ -2,7 +2,7 @@ using Morent.Application.Extensions;
 
 namespace Morent.Application.Features.Car.Commands;
 
-public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Guid>
+public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Result<Guid>>
 {
   private readonly ICarRepository _carRepository;
   private readonly IUnitOfWork _unitOfWork;
@@ -19,7 +19,7 @@ public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Guid>
     _carImageService = carImageService;
   }
 
-  public async Task<Guid> Handle(CreateCarCommand command, CancellationToken cancellationToken)
+  public async Task<Result<Guid>> Handle(CreateCarCommand command, CancellationToken cancellationToken)
   {
     var carId = Guid.NewGuid();
     var pricePerDay = new Money(command.PricePerDay, command.Currency);
@@ -45,6 +45,6 @@ public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Guid>
     await _carRepository.AddAsync(car, cancellationToken);
     await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-    return carId;
+    return Result.Success(carId);
   }
 }

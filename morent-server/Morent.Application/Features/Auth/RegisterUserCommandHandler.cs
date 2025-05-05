@@ -1,6 +1,6 @@
 namespace Morent.Application.Features.Auth;
 
-public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, AuthResponse>
+public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, Result<AuthResponse>>
 {
   private readonly IUserRepository _userRepository;
   private readonly IAuthService _authService;
@@ -13,7 +13,7 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, A
     _authService = authService;
   }
 
-  public async Task<AuthResponse> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
+  public async Task<Result<AuthResponse>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
   {
     var request = new RegisterRequest {
       Name = command.Name,

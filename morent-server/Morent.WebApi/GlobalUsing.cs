@@ -1,0 +1,10 @@
+global using Morent.Application.Features.Auth;
+global using Morent.Application.Features.Auth.DTOs;
+global using Morent.Application.Features.Car;
+global using Morent.Application.Features.Car.DTOs;
+global using Morent.Application.Features.Images;
+global using Morent.Application.Features.Images.DTOs;
+global using Morent.Application.Features.Rental;
+global using Morent.Application.Features.Rental.DTOs;
+global using Morent.Application.Features.Review;
+global using Morent.Application.Features.Review.DTOs;

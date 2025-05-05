@@ -26,131 +26,102 @@ public class UserProfileService : IUserProfileService
     _unitOfWork = unitOfWork;
   }
 
-  public async Task<UserProfileImageDto> GetUserProfileImageAsync(Guid userId)
+  public async Task<Result<UserProfileImageDto>> GetUserProfileImageAsync(Guid userId)
   {
     var user = await _userRepository.GetByIdAsync(userId);
     if (user == null || !user.ProfileImageId.HasValue)
-    {
-      return new UserProfileImageDto
-      {
-        ImageId = null,
-        Url = null!,
-        UploadedAt = null
-      };
-    }
+      return Result.NotFound($"User with ID {userId} not found or doesn't have an profile image");
 
-    var imageResult = await _imageService.GetImageByIdAsync(user.ProfileImageId.Value);
-    if (imageResult == null)
-    {
-      return new UserProfileImageDto
-      {
-        ImageId = null,
-        Url = null!,
-        UploadedAt = null
-      };
-    }
+    var result = await _imageService.GetImageByIdAsync(user.ProfileImageId.Value);
+    if (!result.IsSuccess)
+      return Result.Error(new ErrorList(result.Errors));
 
-    return new UserProfileImageDto
+    var imageResult = result.Value;
+
+    return Result.Success(new UserProfileImageDto
     {
       ImageId = imageResult.Id,
       Url = imageResult.Url,
       UploadedAt = imageResult.UploadedAt
+    });
+  }
+
+  public async Task<Result<UserProfileImageDto>> UpdateUserProfileImageAsync(Guid userId, ImageUploadRequest imageUpload)
+  {
+    if (imageUpload.ImageData.Length > 2 * 1024 * 1024) // 2MB limit for profile images
+      return Result.Invalid(new ValidationError("Image", "Profile image exceeds maximum size of 2MB"));
+
+    await _unitOfWork.BeginTransactionAsync();
+
+    // Get user
+    var user = await _userRepository.GetByIdAsync(userId);
+    if (user == null)
+    {
+      await _unitOfWork.RollbackTransactionAsync();
+      throw new ApplicationException($"User with ID {userId} not found");
+    }
+
+    // Store old image ID to delete later if exists
+    var oldImageId = user.ProfileImageId;
+
+    // Upload new image
+    var uploadResult = await _imageService.UploadImageAsync(imageUpload);
+    if (!uploadResult.IsSuccess)
+    {
+      await _unitOfWork.RollbackTransactionAsync();
+      return Result.Error($"Failed to upload image: {string.Join(", ", uploadResult.Errors)}");
+    }
+
+    var uploadResponse = uploadResult.Value;
+
+    // Update user profile image
+    user.SetPrimaryImage(uploadResult.Value.ImageId);
+    await _userRepository.UpdateAsync(user);
+    await _unitOfWork.CommitTransactionAsync();
+
+    // Delete old image in background if exists
+    if (oldImageId.HasValue)
+    {
+      // Note: In a real system, this would be handled by a background job
+      // to avoid transaction issues if the delete fails
+      _ = Task.Run(async () =>
+      {
+        await _imageService.DeleteImageAsync(oldImageId.Value);
+      });
+    }
+
+    // Return result
+    return new UserProfileImageDto
+    {
+      ImageId = uploadResponse.ImageId,
+      Url = uploadResponse.Url,
+      UploadedAt = DateTime.UtcNow
     };
   }
 
-  public async Task<UserProfileImageDto> UpdateUserProfileImageAsync(Guid userId, ImageUploadRequest imageUpload)
+  public async Task<Result> RemoveUserProfileImageAsync(Guid userId)
   {
-    if (imageUpload.ImageData.Length > 2 * 1024 * 1024) // 2MB limit for profile images
-    {
-      throw new ApplicationException("Profile image exceeds maximum size of 2MB");
-    }
+    await _unitOfWork.BeginTransactionAsync();
 
-    try
-    {
-      await _unitOfWork.BeginTransactionAsync();
-
-      // Get user
-      var user = await _userRepository.GetByIdAsync(userId);
-      if (user == null)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        throw new ApplicationException($"User with ID {userId} not found");
-      }
-
-      // Store old image ID to delete later if exists
-      var oldImageId = user.ProfileImageId;
-
-      // Upload new image
-      var uploadResult = await _imageService.UploadImageAsync(imageUpload);
-      if (!uploadResult.Success)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        throw new ApplicationException($"Failed to upload image: {string.Join(", ", uploadResult.Errors)}");
-      }
-
-      // Update user profile image
-      user.SetPrimaryImage(uploadResult.ImageId);
-      await _userRepository.UpdateAsync(user);
-
-      await _unitOfWork.CommitTransactionAsync();
-
-      // Delete old image in background if exists
-      if (oldImageId.HasValue)
-      {
-        // Note: In a real system, this would be handled by a background job
-        // to avoid transaction issues if the delete fails
-        _ = Task.Run(async () =>
-        {
-          await _imageService.DeleteImageAsync(oldImageId.Value);
-        });
-      }
-
-      // Return result
-      return new UserProfileImageDto
-      {
-        ImageId = uploadResult.ImageId,
-        Url = uploadResult.Url,
-        UploadedAt = DateTime.UtcNow
-      };
-    }
-    catch (Exception ex)
+    // Get user
+    var user = await _userRepository.GetByIdAsync(userId);
+    if (user == null || !user.ProfileImageId.HasValue)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      throw new ApplicationException($"Error updating profile image: {ex.Message}", ex);
+      return Result.NotFound($"User with ID {userId} not found or doesn't have an profile image");
     }
-  }
 
-  public async Task<bool> RemoveUserProfileImageAsync(Guid userId)
-  {
-    try
-    {
-      await _unitOfWork.BeginTransactionAsync();
+    // Store image ID to delete
+    var imageId = user.ProfileImageId.Value;
 
-      // Get user
-      var user = await _userRepository.GetByIdAsync(userId);
-      if (user == null || !user.ProfileImageId.HasValue)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        return false;
-      }
+    // Remove profile image reference
+    user.RemoveProfileImage();
+    await _userRepository.UpdateAsync(user);
 
-      // Store image ID to delete
-      var imageId = user.ProfileImageId.Value;
+    // Delete the image
+    await _imageService.DeleteImageAsync(imageId);
 
-      // Remove profile image reference
-      user.RemoveProfileImage();
-      await _userRepository.UpdateAsync(user);
-
-      // Delete the image
-      await _imageService.DeleteImageAsync(imageId);
-
-      await _unitOfWork.CommitTransactionAsync();
-      return true;
-    }
-    catch
-    {
-      await _unitOfWork.RollbackTransactionAsync();
-      return false;
-    }
+    await _unitOfWork.CommitTransactionAsync();
+    return Result.Success();
   }
 }

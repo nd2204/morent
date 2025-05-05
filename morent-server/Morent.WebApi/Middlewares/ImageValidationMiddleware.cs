@@ -57,6 +57,10 @@ public class ImageValidationMiddleware
             "/api/cars/", // Car image uploads
             "/api/users/" // User profile image uploads
         };
+
+        if (request.Path.Value == null)
+            return false;
+
         return request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase) &&
                imagePaths.Any(path => request.Path.Value.Contains(path)) &&
                (request.Path.Value.Contains("/images") || request.Path.Value.Contains("/profile-image"));

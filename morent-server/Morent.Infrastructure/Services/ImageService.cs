@@ -22,67 +22,57 @@ public class ImageService : IImageService
     _httpClient = httpClient;
   }
 
-  public async Task<ImageUploadResponse> UploadImageAsync(ImageUploadRequest request)
+  public async Task<Result<ImageUploadResponse>> UploadImageAsync(ImageUploadRequest request)
   {
     // Validate image before processing
     var validationErrors = ValidateImage(request);
     if (validationErrors.Count > 0)
     {
-      return ImageUploadResponse.Failed(validationErrors);
+      return Result.Invalid(validationErrors);
     }
 
-    try
-    {
-      await _unitOfWork.BeginTransactionAsync();
+    await _unitOfWork.BeginTransactionAsync();
 
-      // Store image in storage
-      var storageResult = await _imageStorage.StoreImageAsync(
-          request.ImageData,
-          request.FileName,
-          request.ContentType);
+    // Store image in storage
+    var storageResult = await _imageStorage.StoreImageAsync(
+        request.ImageData,
+        request.FileName,
+        request.ContentType);
 
-      if (!storageResult.Success)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        return ImageUploadResponse.Failed(new List<string> { storageResult.Error });
-      }
-
-      // Create image entity
-      var image = MorentImage.Create(
-          request.FileName,
-          request.ContentType,
-          storageResult.Path,
-          request.ImageData.Length);
-
-      // Save to database
-      var savedImage = await _imageRepository.AddAsync(image);
-
-      await _unitOfWork.CommitTransactionAsync();
-
-      // Return successful result
-      return ImageUploadResponse.Successful(
-          savedImage.Id,
-          storageResult.Path,
-          _imageStorage.GetImageUrl(storageResult.Path));
-    }
-    catch (Exception ex)
+    if (!storageResult.Success)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      return ImageUploadResponse.Failed(new List<string> { $"Error uploading image: {ex.Message}" });
+      return Result.Error(storageResult.Error);
     }
+
+    // Create image entity
+    var image = MorentImage.Create(
+        request.FileName,
+        request.ContentType,
+        storageResult.Path,
+        request.ImageData.Length);
+
+    // Save to database
+    var savedImage = await _imageRepository.AddAsync(image);
+
+    await _unitOfWork.CommitTransactionAsync();
+
+    // Return successful result
+    return Result.Success(new ImageUploadResponse(
+        savedImage.Id,
+        storageResult.Path,
+        _imageStorage.GetImageUrl(storageResult.Path)));
   }
 
-  public async Task<bool> DeleteImageAsync(Guid imageId)
+  public async Task<Result> DeleteImageAsync(Guid imageId)
   {
-    try
-    {
       await _unitOfWork.BeginTransactionAsync();
 
       var image = await _imageRepository.GetByIdAsync(imageId);
       if (image == null)
       {
         await _unitOfWork.RollbackTransactionAsync();
-        return false;
+        return Result.NotFound($"Image with ID {imageId} not found");
       }
 
       // Delete from storage
@@ -90,42 +80,37 @@ public class ImageService : IImageService
       if (!storageDeleteResult)
       {
         await _unitOfWork.RollbackTransactionAsync();
-        return false;
+        return Result.Error("Error when deleting image from storage");
       }
 
       // Delete from database
       var imageToDelete = await _imageRepository.GetByIdAsync(imageId);
-      if (imageToDelete == null) {
+      if (imageToDelete == null)
+      {
         await _unitOfWork.RollbackTransactionAsync();
-        return false;
+        return Result.Error($"Error when deleting image from database: Image with ID {imageId} not found.");
       }
 
       var repoDeleteResult = await _imageRepository.DeleteAsync(imageToDelete);
       if (repoDeleteResult < 0)
       {
         await _unitOfWork.RollbackTransactionAsync();
-        return false;
+        return Result.Error($"Error when deleting image from database: negative row affected");
       }
 
       await _unitOfWork.CommitTransactionAsync();
-      return true;
-    }
-    catch
-    {
-      await _unitOfWork.RollbackTransactionAsync();
-      return false;
-    }
+      return Result.Success();
   }
 
-  public async Task<ImageResult> GetImageByIdAsync(Guid imageId)
+  public async Task<Result<ImageDto>> GetImageByIdAsync(Guid imageId)
   {
     var image = await _imageRepository.GetByIdAsync(imageId);
     if (image == null)
     {
-      return null!;
+      return Result.NotFound($"Image with ID {imageId} not found.");
     }
 
-    return new ImageResult
+    return Result.Success(new ImageDto
     {
       Id = image.Id,
       FileName = image.FileName,
@@ -133,24 +118,24 @@ public class ImageService : IImageService
       Size = image.Size,
       UploadedAt = image.UploadedAt,
       Url = _imageStorage.GetImageUrl(image.Path)
-    };
+    });
   }
 
-  private List<string> ValidateImage(ImageUploadRequest request)
+  private List<ValidationError> ValidateImage(ImageUploadRequest request)
   {
-    var errors = new List<string>();
+    var errors = new List<ValidationError>();
 
     // Check content type
     if (request.ContentType != "image/jpeg" && request.ContentType != "image/png")
     {
-      errors.Add("Only JPEG and PNG image formats are supported");
+      errors.Add(new ValidationError("ContentType", "Only JPEG and PNG image formats are supported"));
     }
 
     // Check file size (5MB max)
     const long maxFileSize = 5 * 1024 * 1024;
     if (request.ImageData.Length > maxFileSize)
     {
-      errors.Add($"Image size exceeds the maximum allowed size of 5MB");
+      errors.Add(new ValidationError("ImageData", $"Image size exceeds the maximum allowed size of 5MB"));
     }
 
     return errors;
@@ -167,12 +152,12 @@ public class ImageService : IImageService
     if (string.IsNullOrWhiteSpace(contentType))
       return null;
 
-    if(!contentType.StartsWith("image/"))
+    if (!contentType.StartsWith("image/"))
       return null;
 
     if (!response.IsSuccessStatusCode)
       throw new Exception($"Failed to fetch image. StatusCode: {response.StatusCode}");
-    
+
 
     var image = await response.Content.ReadAsStreamAsync();
     return new ImageUploadRequest

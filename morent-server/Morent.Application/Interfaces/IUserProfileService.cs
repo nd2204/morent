@@ -4,7 +4,7 @@ namespace Morent.Application.Interfaces;
 
 public interface IUserProfileService
 {
-  Task<UserProfileImageDto> GetUserProfileImageAsync(Guid userId);
-  Task<UserProfileImageDto> UpdateUserProfileImageAsync(Guid userId, ImageUploadRequest imageUpload);
-  Task<bool> RemoveUserProfileImageAsync(Guid userId);
+  Task<Result<UserProfileImageDto>> GetUserProfileImageAsync(Guid userId);
+  Task<Result<UserProfileImageDto>> UpdateUserProfileImageAsync(Guid userId, ImageUploadRequest imageUpload);
+  Task<Result> RemoveUserProfileImageAsync(Guid userId);
 }

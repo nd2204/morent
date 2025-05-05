@@ -2,7 +2,7 @@ using System;
 
 namespace Morent.Application.Features.Auth;
 
-public class RevokeTokenCommandHandler : ICommandHandler<RevokeTokenCommand, bool>
+public class RevokeTokenCommandHandler : ICommandHandler<RevokeTokenCommand, Result>
 {
   private readonly IUserRepository _userRepository;
 
@@ -11,12 +11,12 @@ public class RevokeTokenCommandHandler : ICommandHandler<RevokeTokenCommand, boo
     _userRepository = userRepository;
   }
 
-  public async Task<bool> Handle(RevokeTokenCommand request, CancellationToken cancellationToken)
+  public async Task<Result> Handle(RevokeTokenCommand request, CancellationToken cancellationToken)
   {
     var user = await _userRepository.GetByIdAsync(request.userId);
 
     if (user == null)
-      return false;
+      return Result.NotFound($"User with {request.userId} not found");
 
     // Revoke the specific refresh token
     if (!string.IsNullOrEmpty(request.refreshToken))
@@ -30,7 +30,7 @@ public class RevokeTokenCommandHandler : ICommandHandler<RevokeTokenCommand, boo
     }
 
     await _userRepository.UpdateAsync(user);
-    return true;
+    return Result.Success();
   }
 
 }

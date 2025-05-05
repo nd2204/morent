@@ -1,9 +1,6 @@
-using System;
-using Morent.Application.Features.Car.DTOs;
-
 namespace Morent.Application.Features.Car.Commands;
 
-public class CreateCarCommand : ICommand<Guid>
+public class CreateCarCommand : ICommand<Result<Guid>>
 {
   public int Year { get; set; }
   public Guid ModelId { get; set; }

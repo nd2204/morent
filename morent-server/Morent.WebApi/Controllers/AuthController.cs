@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Ardalis.Result.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -29,22 +30,18 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
     {
-        try
-        {
-            var command = new LoginUserQuery(request.LoginId, request.Password);
-            var response = await _mediator.Send(command);
+        var command = new LoginUserQuery(request.LoginId, request.Password);
+        var result = await _mediator.Send(command);
 
-            // Set refresh token in HttpOnly cookie
-            SetRefreshTokenCookie(response.RefreshToken);
-
-            // Remove refresh token from response body for security
-            // but keep a copy of it in the response for mobile clients
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
+        // Set refresh token in HttpOnly cookie
+        if (result.IsSuccess)
         {
-            return Unauthorized(new { message = ex.Message });
+            SetRefreshTokenCookie(result.Value.RefreshToken);
         }
+
+        // Remove refresh token from response body for security
+        // but keep a copy of it in the response for mobile clients
+        return this.ToActionResult(result);
     }
 
     [HttpPost("register")]
@@ -52,60 +49,63 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponse>> Signup([FromBody] RegisterUserCommand request)
     {
-        try
-        {
-            var command = new RegisterUserCommand(
-                request.Name,
-                request.Username,
-                request.Email,
-                request.Password);
+        var command = new RegisterUserCommand(
+            request.Name,
+            request.Username,
+            request.Email,
+            request.Password);
 
-            var response = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            // Set refresh token in HttpOnly cookie
-            SetRefreshTokenCookie(response.RefreshToken);
+        // Set refresh token in HttpOnly cookie
+        if (result.IsSuccess)
+            SetRefreshTokenCookie(result.Value.RefreshToken);
 
-            return Ok(response);
-        }
-        catch (ApplicationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return this.ToActionResult(result);
     }
 
     [HttpPost("refresh")]
     public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        try
-        {
-            var command = new RefreshTokenCommand(request.RefreshToken);
-            var response = await _mediator.Send(command);
+        var command = new RefreshTokenCommand(request.RefreshToken);
+        var result = await _mediator.Send(command);
 
-            // For enhanced security, set refresh token in an HttpOnly cookie
-            // And return only the access token in the response body
-            SetRefreshTokenCookie(response.RefreshToken);
-
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException)
+        // For enhanced security, set refresh token in an HttpOnly cookie
+        // And return only the access token in the response body
+        if (result != null)
         {
-            return Unauthorized(new { message = "Invalid refresh token" });
+            SetRefreshTokenCookie(result.Value.RefreshToken);
         }
+
+        return result.ToActionResult(this);
     }
 
-
-    // Helper method to set refresh token in HttpOnly cookie
-    private void SetRefreshTokenCookie(string token)
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
     {
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true, // Use in production with HTTPS
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
+        // Get user ID from claims
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        logger_.LogWarning("{0}", User.FindFirst(ClaimTypes.NameIdentifier));
 
-        Response.Cookies.Append("refreshToken", token, cookieOptions);
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+            return Unauthorized();
+
+        // Get refresh token from cookie
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        // Revoke the token
+        if (refreshToken != null)
+        {
+            var command = new RevokeTokenCommand(refreshToken, userGuid);
+            var result = await _mediator.Send(command);
+            if (!result.IsSuccess) return this.ToActionResult(result);
+        }
+
+        // Clear the cookie
+        Response.Cookies.Delete("refreshToken");
+
+        return Ok(new { message = "Logged out successfully" });
     }
 
     [HttpGet("google-login")]
@@ -156,30 +156,17 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
-    [Authorize]
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    // Helper method to set refresh token in HttpOnly cookie
+    private void SetRefreshTokenCookie(string token)
     {
-        // Get user ID from claims
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        logger_.LogWarning("{0}", User.FindFirst(ClaimTypes.NameIdentifier));
-
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
-            return Unauthorized();
-
-        // Get refresh token from cookie
-        var refreshToken = Request.Cookies["refreshToken"];
-
-        // Revoke the token
-        if (refreshToken != null)
+        var cookieOptions = new CookieOptions
         {
-            var command = new RevokeTokenCommand(refreshToken, userGuid);
-            await _mediator.Send(command);
-        }
+            HttpOnly = true,
+            Secure = true, // Use in production with HTTPS
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(7)
+        };
 
-        // Clear the cookie
-        Response.Cookies.Delete("refreshToken");
-
-        return Ok(new { message = "Logged out successfully" });
+        Response.Cookies.Append("refreshToken", token, cookieOptions);
     }
 }

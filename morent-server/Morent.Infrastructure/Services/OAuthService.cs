@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
 using Morent.Application.Interfaces;
 using Morent.Infrastructure.Settings;
@@ -47,12 +48,22 @@ public class OAuthService : IOAuthService
     if (payload.GetProperty("aud").GetString() != _appSettings.GoogleClientId)
       return null;
 
+    // TODO: handle invalid response
+    var email = payload.GetProperty("email").GetString();
+    Guard.Against.Null(email);
+    var firstName = payload.GetProperty("given_name").GetString();
+    Guard.Against.Null(firstName);
+    var lastName = payload.GetProperty("family_name").GetString();
+    Guard.Against.Null(lastName);
+    var providerKey = payload.GetProperty("sub").GetString();
+    Guard.Against.Null(providerKey);
+
     return new OAuthLoginInfo
     {
-      Email = payload.GetProperty("email").GetString(),
-      FirstName = payload.GetProperty("given_name").GetString(),
-      LastName = payload.GetProperty("family_name").GetString(),
-      ProviderKey = payload.GetProperty("sub").GetString()
+      Email = email,
+      FirstName = firstName,
+      LastName = lastName,
+      ProviderKey = providerKey
     };
   }
 

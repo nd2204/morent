@@ -7,7 +7,7 @@ namespace Morent.Core.MorentCarAggregate;
 public class MorentCar : EntityBase<Guid>, IAggregateRoot
 {
   public Guid CarModelId { get; private set; }
-  public MorentCarModel? CarModel { get; private set; } = null!;
+  public MorentCarModel CarModel { get; private set; } = null!;
   public string LicensePlate { get; private set; }
   public Money PricePerDay { get; private set; }
   public bool IsAvailable { get; private set; }

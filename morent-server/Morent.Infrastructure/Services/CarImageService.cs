@@ -1,4 +1,6 @@
 using System;
+using System.Reflection.Metadata.Ecma335;
+using Morent.Application.Extensions;
 using Morent.Application.Features.Car.DTOs;
 using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
@@ -26,12 +28,12 @@ public class CarImageService : ICarImageService
     _unitOfWork = unitOfWork;
   }
 
-  public async Task<IEnumerable<CarImageDto>> GetCarImagesAsync(Guid carId, CancellationToken cancellationToken = default)
+  public async Task<Result<IEnumerable<CarImageDto>>> GetCarImagesAsync(Guid carId, CancellationToken cancellationToken = default)
   {
     var car = await _carRepository.GetCarWithImagesAsync(carId);
     if (car == null)
     {
-      return Enumerable.Empty<CarImageDto>();
+      return Result.NotFound($"Car with ID {carId} not found.");
     }
 
     var result = new List<CarImageDto>();
@@ -46,281 +48,197 @@ public class CarImageService : ICarImageService
           ImageId = carImage.ImageId,
           IsPrimary = carImage.IsPrimary,
           DisplayOrder = carImage.DisplayOrder,
-          Url = _imageService.GetImageByIdAsync(carImage.ImageId).Result.Url
+          Url = (await _imageService.GetImageByIdAsync(carImage.ImageId)).Value.Url
         });
       }
     }
 
-    return result;
+    return Result.Success(result as IEnumerable<CarImageDto>);
   }
 
-  public async Task<CarImageDto> AddCarImageAsync(Guid carId, ImageUploadRequest request, bool isPrimary, CancellationToken cancellationToken = default)
+  public async Task<Result<CarImageDto>> AddCarImageAsync(Guid carId, ImageUploadRequest request, bool isPrimary, CancellationToken cancellationToken = default)
   {
-    try
-    {
-      await _unitOfWork.BeginTransactionAsync();
+    await _unitOfWork.BeginTransactionAsync();
 
-      // First, upload the image
-      var uploadResult = await _imageService.UploadImageAsync(request);
-      if (!uploadResult.Success)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        throw new ApplicationException($"Failed to upload image: {string.Join(", ", uploadResult.Errors)}");
-      }
-
-      return await AssignCarImageAsync(carId, uploadResult.ImageId, isPrimary);
-    }
-    catch (Exception ex)
+    // First, upload the image
+    var uploadResult = await _imageService.UploadImageAsync(request);
+    if (!uploadResult.IsSuccess)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      throw new ApplicationException($"Error adding car image: {ex.Message}", ex);
+      return Result.Error($"Failed to upload image: {string.Join(", ", uploadResult.Errors)}");
     }
+
+    return await AssignCarImageAsync(carId, uploadResult.Value.ImageId, isPrimary);
   }
 
-  public async Task<CarImageDto> AddCarImageAsync(Guid carId, UploadCarImageRequest request, CancellationToken cancellationToken = default)
+  public async Task<Result<CarImageDto>> AddCarImageAsync(Guid carId, UploadCarImageRequest request, CancellationToken cancellationToken = default)
   {
-    try
+    using var stream = request.Image.OpenReadStream();
+    var imageUploadRequest = new ImageUploadRequest
     {
-      using var stream = request.Image.OpenReadStream(); 
-      var imageUploadRequest = new ImageUploadRequest {
-        ImageData = stream,
-        FileName = request.Image.FileName,
-        ContentType = request.Image.ContentType
-      };
-      return await AddCarImageAsync(carId, imageUploadRequest, request.SetAsPrimary);
-    }
-    catch (Exception ex)
+      ImageData = stream,
+      FileName = request.Image.FileName,
+      ContentType = request.Image.ContentType
+    };
+    return await AddCarImageAsync(carId, imageUploadRequest, request.SetAsPrimary);
+  }
+
+  public async Task<Result> DeleteCarImageAsync(Guid carId, Guid imageId, CancellationToken cancellationToken = default)
+  {
+    await _unitOfWork.BeginTransactionAsync();
+
+    // Get the car
+    var car = await _carRepository.GetByIdAsync(carId);
+    if (car == null)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      throw new ApplicationException($"Error adding car image: {ex.Message}", ex);
+      return Result.NotFound($"Car with ID {carId} not found.");
     }
-  }
 
-  public async Task<bool> DeleteCarImageAsync(Guid carId, Guid imageId, CancellationToken cancellationToken = default)
-  {
-    try
-    {
-      await _unitOfWork.BeginTransactionAsync();
-
-      // Get the car
-      var car = await _carRepository.GetByIdAsync(carId);
-      if (car == null)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        return false;
-      }
-
-      // Check if image exists
-      var carImage = car.Images.FirstOrDefault(i => i.ImageId == imageId);
-      if (carImage == null)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        return false;
-      }
-
-      // Remove from car
-      car.RemoveImage(imageId);
-
-      // Update car
-      await _carRepository.UpdateAsync(car);
-
-      // Delete image
-      await _imageService.DeleteImageAsync(imageId);
-
-      await _unitOfWork.CommitTransactionAsync();
-      return true;
-    }
-    catch
+    // Check if image exists
+    var carImage = car.Images.FirstOrDefault(i => i.ImageId == imageId);
+    if (carImage == null)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      return false;
+      return Result.NotFound($"Image with ID {imageId} not found.");
     }
+
+    // Remove from car
+    car.RemoveImage(imageId);
+
+    // Update car
+    await _carRepository.UpdateAsync(car);
+
+    // Delete image
+    await _imageService.DeleteImageAsync(imageId);
+    await _unitOfWork.CommitTransactionAsync();
+
+    return Result.Success();
   }
 
-  public async Task<CarImageDto> SetPrimaryImageAsync(Guid carId, Guid imageId, CancellationToken cancellationToken = default)
+  public async Task<Result<CarImageDto>> SetPrimaryImageAsync(Guid carId, Guid imageId, CancellationToken cancellationToken = default)
   {
-    try
+    await _unitOfWork.BeginTransactionAsync();
+
+    // Get the car
+    var car = await _carRepository.GetByIdAsync(carId);
+    if (car == null)
     {
-      await _unitOfWork.BeginTransactionAsync();
-
-      // Get the car
-      var car = await _carRepository.GetByIdAsync(carId);
-      if (car == null)
-      {
-        throw new ApplicationException($"Car with ID {carId} not found");
-      }
-
-      // Set primary image
-      car.SetPrimaryImage(imageId);
-
-      // Update car
-      await _carRepository.UpdateAsync(car);
-
-      // Get updated car image
-      var carImage = car.Images.First(i => i.ImageId == imageId);
-      var imageUrl = _imageService.GetImageByIdAsync(imageId).Result.Url;
-
-      await _unitOfWork.CommitTransactionAsync();
-
-      // Return result
-      return new CarImageDto
-      {
-        ImageId = carImage.ImageId,
-        IsPrimary = carImage.IsPrimary,
-        DisplayOrder = carImage.DisplayOrder,
-        Url = imageUrl
-      };
+      return Result.NotFound($"Car with ID {carId} not found");
     }
-    catch (Exception ex)
+
+    // Set primary image
+    car.SetPrimaryImage(imageId);
+
+    // Update car
+    await _carRepository.UpdateAsync(car);
+
+    // Get updated car image
+    var carImage = car.Images.First(i => i.ImageId == imageId);
+    var imageUrl = _imageService.GetImageByIdAsync(imageId).Result.Value.Url;
+
+    await _unitOfWork.CommitTransactionAsync();
+
+    // Return result
+    return Result.Success(new CarImageDto
+    {
+      ImageId = carImage.ImageId,
+      IsPrimary = carImage.IsPrimary,
+      DisplayOrder = carImage.DisplayOrder,
+      Url = imageUrl
+    });
+  }
+
+  public async Task<Result> ReorderCarImagesAsync(Guid carId, List<CarImageOrderItem> newOrder, CancellationToken cancellationToken = default)
+  {
+    if (newOrder == null || !newOrder.Any())
+    {
+      return Result.Invalid(new ValidationError("No reordering information provided"));
+    }
+
+    await _unitOfWork.BeginTransactionAsync();
+
+    // Get the car
+    var car = await _carRepository.GetByIdAsync(carId);
+    if (car == null)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      throw new ApplicationException($"Error setting primary car image: {ex.Message}", ex);
+      return Result.NotFound($"Car with ID {carId} not found");
     }
-  }
 
-  public async Task<bool> ReorderCarImagesAsync(Guid carId, List<CarImageOrderItem> newOrder, CancellationToken cancellationToken = default)
-  {
-    try
+    // Validate order items
+    foreach (var item in newOrder)
     {
-      await _unitOfWork.BeginTransactionAsync();
-
-      // Get the car
-      var car = await _carRepository.GetByIdAsync(carId);
-      if (car == null)
+      if (!car.Images.Any(i => i.ImageId == item.ImageId))
       {
         await _unitOfWork.RollbackTransactionAsync();
-        return false;
+        return Result.Error($"Images with ID {item.ImageId} does not belong to this car");
       }
-
-      // Validate order items
-      foreach (var item in newOrder)
-      {
-        if (!car.Images.Any(i => i.ImageId == item.ImageId))
-        {
-          await _unitOfWork.RollbackTransactionAsync();
-          return false;
-        }
-      }
-
-      // Update order for each image
-      foreach (var item in newOrder)
-      {
-        car.ReorderImage(item.ImageId, item.NewOrder);
-      }
-
-      // Update car
-      await _carRepository.UpdateAsync(car);
-
-      await _unitOfWork.CommitTransactionAsync();
-      return true;
     }
-    catch
+
+    // Update order for each image
+    foreach (var item in newOrder)
+    {
+      car.ReorderImage(item.ImageId, item.NewOrder);
+    }
+
+    // Update car
+    await _carRepository.UpdateAsync(car);
+
+    await _unitOfWork.CommitTransactionAsync();
+    return Result.Success();
+  }
+
+  public async Task<Result<CarImageDto>> AssignCarImageAsync(Guid carId, Guid imageId, bool isPrimary, CancellationToken cancellationToken = default)
+  {
+    await _unitOfWork.BeginTransactionAsync();
+
+    // Get the car with fresh tracking context
+    var car = await _carRepository.GetByIdAsync(carId);
+    if (car == null)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      return false;
+      return CarNotFoundResult(carId);
     }
-  }
 
-  public async Task<CarImageDto> AssignCarImageAsync(Guid carId, Guid imageId, bool isPrimary, CancellationToken cancellationToken = default)
-  {
-    try
+    // Get the image
+    var image = await _imageRepository.GetByIdAsync(imageId);
+    if (image == null)
     {
-      await _unitOfWork.BeginTransactionAsync();
+      await _unitOfWork.RollbackTransactionAsync();
+      return Result.NotFound($"Image with ID {imageId} not found");
+    }
 
-      // Get the car with fresh tracking context
-      var car = await _carRepository.GetByIdAsync(carId);
-      if (car == null)
+    // Check if the image is already assigned to this car
+    var existingCarImage = car.Images.FirstOrDefault(ci => ci.ImageId == imageId);
+    if (existingCarImage != null)
+    {
+      // If the image is already assigned, just update the isPrimary flag if needed
+      if (existingCarImage.IsPrimary != isPrimary)
       {
-        await _unitOfWork.RollbackTransactionAsync();
-        throw new ApplicationException($"Car with ID {carId} not found");
+        existingCarImage.SetAsPrimary(isPrimary);
+        await _carRepository.UpdateAsync(car);
       }
 
-      // Get the image
-      var image = await _imageRepository.GetByIdAsync(imageId);
-      if (image == null)
-      {
-        await _unitOfWork.RollbackTransactionAsync();
-        throw new ApplicationException($"Image with ID {imageId} not found");
-      }
-
-      // Check if the image is already assigned to this car
-      var existingCarImage = car.Images.FirstOrDefault(ci => ci.ImageId == imageId);
-      if (existingCarImage != null)
-      {
-        // If the image is already assigned, just update the isPrimary flag if needed
-        if (existingCarImage.IsPrimary != isPrimary)
-        {
-          existingCarImage.SetAsPrimary(isPrimary);
-          await _carRepository.UpdateAsync(car);
-        }
-
-        await _unitOfWork.SaveChangesAsync();
-        await _unitOfWork.CommitTransactionAsync();
-
-        return new CarImageDto
-        {
-          ImageId = existingCarImage.ImageId,
-          IsPrimary = existingCarImage.IsPrimary,
-          DisplayOrder = existingCarImage.DisplayOrder,
-          Url = _imageService.GetImageByIdAsync(imageId).Result.Url
-        };
-      }
-
-      // Add image to car
-      var carImage = car.AddImage(image, isPrimary);
-
-      // Update car with retry logic for concurrency issues
-      bool success = false;
-      int maxRetries = 3;
-      int retryCount = 0;
-
-      while (!success && retryCount < maxRetries)
-      {
-        try
-        {
-          await _carRepository.UpdateAsync(car);
-          await _unitOfWork.SaveChangesAsync();
-          success = true;
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-          retryCount++;
-          if (retryCount >= maxRetries)
-          {
-            throw;  // Re-throw if we've exhausted our retries
-          }
-
-          // Get a fresh copy of the car and try again
-          await _unitOfWork.RollbackTransactionAsync();
-          await _unitOfWork.BeginTransactionAsync();
-
-          car = await _carRepository.GetByIdAsync(carId);
-          if (car == null)
-          {
-            await _unitOfWork.RollbackTransactionAsync();
-            throw new ApplicationException($"Car with ID {carId} not found on retry {retryCount}");
-          }
-
-          // Add the image again to the fresh car entity
-          carImage = car.AddImage(image, isPrimary);
-        }
-      }
-
+      await _unitOfWork.SaveChangesAsync();
       await _unitOfWork.CommitTransactionAsync();
 
-      // Return result
-      return new CarImageDto
-      {
-        ImageId = carImage.ImageId,
-        IsPrimary = carImage.IsPrimary,
-        DisplayOrder = carImage.DisplayOrder,
-        Url = _imageService.GetImageByIdAsync(imageId).Result.Url
-      };
+      var result = existingCarImage.ToDto();
+      result.Url = (await _imageService.GetImageByIdAsync(imageId)).Value.Url;
+      return Result.Success(result);
     }
-    catch (Exception ex)
-    {
-      await _unitOfWork.RollbackTransactionAsync();
-      throw new ApplicationException($"Error setting primary car image: {ex.Message}", ex);
-    }
+
+    // Add image to car
+    var carImage = car.AddImage(image, isPrimary);
+
+    await _carRepository.UpdateAsync(car);
+    await _unitOfWork.SaveChangesAsync();
+    await _unitOfWork.CommitTransactionAsync();
+
+    var carImageResult = carImage.ToDto();
+    carImageResult.Url = (await _imageService.GetImageByIdAsync(imageId)).Value.Url;
+    return Result.Success(carImageResult);
   }
+
+  private Result CarNotFoundResult(Guid carId) => Result.NotFound($"Car with ID {carId} not found.");
 }
