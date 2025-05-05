@@ -1,8 +1,15 @@
 using System;
+using Morent.Application.Features.DTOs;
 
 namespace Morent.Application.Features.Car.DTOs;
 
 public class GetCarsQuery
+{
+  public CarFilter? carFilter { get; set; }
+  public PagedQuery pagedQuery { get; set; } = new PagedQuery();
+}
+
+public class CarFilter
 {
   public string? Brand { get; set; }
   public string? Type { get; set; }
@@ -14,7 +21,5 @@ public class GetCarsQuery
   public int? Rating { get; set; }
   public string? Location { get; set; }
   public string? Search { get; set; }
-  public int Page { get; set; } = 1;
-  public int PageSize { get; set; } = 10;
   public string? Sort { get; set; }
 }

@@ -8,6 +8,10 @@ public class MorentReviewConfiguration : IEntityTypeConfiguration<MorentReview>
   {
     builder.HasKey(e => e.Id);
 
+    builder
+      .Navigation(r => r.User)
+      .AutoInclude();
+
     builder.HasOne<MorentUser>()
       .WithMany()
       .HasForeignKey(e => e.UserId)

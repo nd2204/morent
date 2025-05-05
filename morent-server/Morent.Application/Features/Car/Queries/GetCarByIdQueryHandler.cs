@@ -4,7 +4,7 @@ using Morent.Application.Features.Car.DTOs;
 
 namespace Morent.Application.Features.Car;
 
-public class GetCarByIdQueryHandler : IQueryHandler<GetCarByIdQuery, CarDetailDto>
+public class GetCarByIdQueryHandler : IQueryHandler<GetCarByIdQuery, Result<CarDetailDto>>
 {
   private readonly ICarRepository _carRepository;
   private readonly IReviewRepository _reviewRepository;
@@ -17,12 +17,11 @@ public class GetCarByIdQueryHandler : IQueryHandler<GetCarByIdQuery, CarDetailDt
     _reviewRepository = reviewRepository;
   }
 
-  public async Task<CarDetailDto> Handle(GetCarByIdQuery query, CancellationToken cancellationToken)
+  public async Task<Result<CarDetailDto>> Handle(GetCarByIdQuery query, CancellationToken cancellationToken)
   {
     var car = await _carRepository.GetCarWithReviewsAsync(query.Id, cancellationToken);
-    if (car == null)
-      throw new ApplicationException($"Car with ID {query.Id} not found");
-
-    return car.ToCarDetailDto();
+    return (car == null)
+      ? Result.NotFound($"Car with ID {query.Id} not found")
+      : Result.Success(car.ToCarDetailDto());
   }
 }

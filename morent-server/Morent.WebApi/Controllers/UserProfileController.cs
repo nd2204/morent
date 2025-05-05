@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Ardalis.Result.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Morent.Application.Features.Auth.DTOs;
@@ -23,14 +24,8 @@ public class UserProfileController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileImageDto>> GetUserProfileImage(Guid userId)
     {
-        var profileImage = await _userProfileImageService.GetUserProfileImageAsync(userId);
-        
-        if (profileImage == null || profileImage.ImageId == null)
-        {
-            return NotFound();
-        }
-        
-        return Ok(profileImage);
+        var result = await _userProfileImageService.GetUserProfileImageAsync(userId);
+        return this.ToActionResult(result);
     }
     
     [HttpPost("{userId}/profile-image")]
@@ -92,13 +87,7 @@ public class UserProfileController : ControllerBase
         }
         
         var result = await _userProfileImageService.RemoveUserProfileImageAsync(userId);
-        
-        if (!result)
-        {
-            return NotFound();
-        }
-        
-        return NoContent();
+        return this.ToActionResult(result);
     }
     
     private bool IsUserAuthorized(Guid userId)

@@ -7,7 +7,7 @@ public static class CarMapping
 {
   public static CarDetailDto ToCarDetailDto(this MorentCar car)
   {
-    var reviewDtos = new List<CarReviewDto>();
+    var reviewDtos = new List<ReviewDto>();
     foreach (var review in car.Reviews)
     {
       reviewDtos.Add(review.ToDto());
@@ -73,13 +73,14 @@ public static class CarMapping
     };
   }
 
-  public static CarReviewDto ToDto(this MorentReview model)
+  public static ReviewDto ToDto(this MorentReview model)
   {
-    return new CarReviewDto
+    return new ReviewDto
     {
       UserId = model.UserId,
       Comment = model.Comment,
       Rating = model.Rating,
+      CreatedAt = model.CreatedAt
     };
   }
 

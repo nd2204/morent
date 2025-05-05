@@ -2,7 +2,7 @@ using System;
 
 namespace Morent.Application.Features.Auth;
 
-public class LoginUserQueryHandler : IQueryHandler<LoginUserQuery, AuthResponse>
+public class LoginUserQueryHandler : IQueryHandler<LoginUserQuery, Result<AuthResponse>>
 {
   private readonly IAuthService _authService;
 
@@ -11,7 +11,7 @@ public class LoginUserQueryHandler : IQueryHandler<LoginUserQuery, AuthResponse>
     _authService = authService;
   }
 
-  public async Task<AuthResponse> Handle(LoginUserQuery query, CancellationToken cancellationToken)
+  public async Task<Result<AuthResponse>> Handle(LoginUserQuery query, CancellationToken cancellationToken)
   {
     var request = new LoginRequest
     {

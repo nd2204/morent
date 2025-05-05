@@ -2,7 +2,7 @@ using System;
 
 namespace Morent.Application.Features.Review;
 
-public class LeaveReviewCommand : ICommand<Guid>
+public class LeaveReviewCommand : ICommand<Result<Guid>>
 {
   public Guid UserId { get; set; }
   public Guid CarId { get; set; }
