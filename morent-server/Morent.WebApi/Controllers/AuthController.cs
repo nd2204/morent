@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Ardalis.Result.AspNetCore;
 using MediatR;
@@ -7,8 +6,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Morent.Application.Features.Auth;
-using Morent.Application.Features.Auth.DTOs;
 
 namespace Morent.WebApi.Controllers;
 [Route("api/auth")]

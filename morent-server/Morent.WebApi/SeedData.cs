@@ -1,14 +1,11 @@
 using Ardalis.SharedKernel;
 using Microsoft.EntityFrameworkCore;
-using Morent.Application.Features.Car.DTOs;
-using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
 using Morent.Core.MediaAggregate;
 using Morent.Core.MorentCarAggregate;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data;
-using Morent.Infrastructure.Services;
 public class SeedData
 {
   private readonly IAuthService _authService;

@@ -1,3 +1,5 @@
+using Ardalis.SharedKernel;
+
 namespace Morent.WebApi.Configurations;
 
 public static class MediatrConfigs
@@ -10,7 +12,8 @@ public static class MediatrConfigs
         Application.AssemblyReference.Assembly  // Application
       };
 
-    services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies!));
+    services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies!))
+      .AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
 
     return services;
   }
