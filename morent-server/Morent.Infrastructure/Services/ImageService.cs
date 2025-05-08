@@ -1,4 +1,3 @@
-using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
 using Morent.Core.MediaAggregate;
 

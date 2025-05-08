@@ -1,8 +1,5 @@
-using System;
-using System.Reflection.Metadata.Ecma335;
 using Morent.Application.Extensions;
 using Morent.Application.Features.Car.DTOs;
-using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
 using Morent.Application.Repositories;
 using Morent.Core.MediaAggregate;
@@ -124,7 +121,7 @@ public class CarImageService : ICarImageService
     var car = await _carRepository.GetByIdAsync(carId);
     if (car == null)
     {
-      return Result.NotFound($"Car with ID {carId} not found");
+      return CarNotFoundResult(carId);
     }
 
     // Set primary image
@@ -163,7 +160,7 @@ public class CarImageService : ICarImageService
     if (car == null)
     {
       await _unitOfWork.RollbackTransactionAsync();
-      return Result.NotFound($"Car with ID {carId} not found");
+      return CarNotFoundResult(carId);
     }
 
     // Validate order items
