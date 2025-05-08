@@ -1,6 +1,6 @@
 using System;
 
-namespace Morent.Application.Features.Images.DTOs;
+namespace Morent.Application.Features.DTOs;
 
 public class ImageStorageResult
 {

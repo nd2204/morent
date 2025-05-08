@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
-using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
 using Morent.Core.MediaAggregate;
-using Morent.Infrastructure.Data;
 
 namespace Morent.Infrastructure.Services;
 

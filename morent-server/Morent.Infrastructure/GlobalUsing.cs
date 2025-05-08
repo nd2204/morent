@@ -12,3 +12,5 @@ global using Morent.Core.MorentUserAggregate;
 global using Morent.Core.MorentCarAggregate;
 global using Morent.Core.MorentRentalAggregate;
 global using Morent.Core.MorentReviewAggregate;
+
+global using Morent.Application.Features.DTOs;

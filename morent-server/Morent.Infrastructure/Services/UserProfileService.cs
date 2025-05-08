@@ -1,6 +1,4 @@
-using System;
 using Morent.Application.Features.Auth.DTOs;
-using Morent.Application.Features.Images.DTOs;
 using Morent.Application.Interfaces;
 using Morent.Application.Repositories;
 using Morent.Core.MediaAggregate;

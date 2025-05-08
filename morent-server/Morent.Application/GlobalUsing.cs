@@ -10,7 +10,7 @@ global using Morent.Core.MorentRentalAggregate;
 global using Morent.Core.ValueObjects;
 
 global using Morent.Application.Features.Auth.DTOs;
-global using Morent.Application.Features.Images.DTOs;
+global using Morent.Application.Features.DTOs;
 global using Morent.Application.Features.Car.DTOs;
 global using Morent.Application.Features.Rental.DTOs;
 global using Morent.Application.Features.Review.DTOs;

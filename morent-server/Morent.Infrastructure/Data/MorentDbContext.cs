@@ -4,9 +4,11 @@ using Morent.Infrastructure.Data.Configs;
 
 namespace Morent.Infrastructure.Data;
 
-public class MorentDbContext(DbContextOptions<MorentDbContext> options) : DbContext(options)
+public class MorentDbContext(
+  DbContextOptions<MorentDbContext> options,
+  IDomainEventDispatcher? dispatcher) : DbContext(options)
 {
-  // private readonly IDomainEventDispatcher? _dispatcher = dispatcher;
+  private readonly IDomainEventDispatcher? _dispatcher = dispatcher;
 
   public DbSet<MorentUser> Users => Set<MorentUser>();
   public DbSet<MorentCar> Cars => Set<MorentCar>();
@@ -22,21 +24,21 @@ public class MorentDbContext(DbContextOptions<MorentDbContext> options) : DbCont
     modelBuilder.ApplyConfigurationsFromAssembly(typeof(MorentDbContext).Assembly);
   }
 
-  // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
-  // {
-  //   int result = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+  {
+    int result = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-  //   // ignore events if no dispatcher provided
-  //   if (_dispatcher == null) return result;
+    // ignore events if no dispatcher provided
+    if (_dispatcher == null) return result;
 
-  //   // dispatch events only if save was successful
-  //   var entitiesWithEvents = ChangeTracker.Entries<HasDomainEventsBase>()
-  //       .Select(e => e.Entity)
-  //       .Where(e => e.DomainEvents.Any())
-  //       .ToArray();
+    // dispatch events only if save was successful
+    var entitiesWithEvents = ChangeTracker.Entries<HasDomainEventsBase>()
+        .Select(e => e.Entity)
+        .Where(e => e.DomainEvents.Any())
+        .ToArray();
 
-  //   await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
+    await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
 
-  //   return result;
-  // }
+    return result;
+  }
 }
