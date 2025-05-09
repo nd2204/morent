@@ -3,15 +3,93 @@ import { View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text } from '~/components/ui/text';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
+// Remove conflicting Button import since it's defined locally
+// Remove conflicting Input import since it's defined locally
 import { Card } from '~/components/ui/card';
 import { ChevronLeft, CreditCard } from 'lucide-react-native';
 import { iconWithClassName } from '~/lib/icons/iconWithClassName';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import styled from "styled-components";
 
 // Register icons with NativeWind
 [ChevronLeft, CreditCard].forEach(iconWithClassName);
+
+const Container = styled.div`
+  max-width: 400px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 24px;
+  margin-bottom: 32px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 18px;
+  margin-bottom: 12px;
+`;
+
+const Label = styled.label`
+  font-size: 14px;
+  margin-bottom: 4px;
+  display: block;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  font-size: 15px;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  font-size: 15px;
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 12px;
+  background: #3563e9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+`;
+
+const Checkbox = styled.input`
+  margin-right: 8px;
+`;
+
+const Step = styled.div`
+  margin-bottom: 32px;
+`;
+
+const CarImage = styled.img`
+  width: 80px;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 16px;
+`;
+
+const PriceRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+`;
+
+const Small = styled.small`
+  color: #888;
+`;
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -84,7 +162,7 @@ export default function PaymentScreen() {
                 <Input
                   placeholder="1234 5678 9012 3456"
                   value={cardNumber}
-                  onChangeText={(text) => setCardNumber(formatCardNumber(text))}
+                  onChangeText={(text: string) => setCardNumber(formatCardNumber(text))}
                   keyboardType="numeric"
                   maxLength={19}
                 />
@@ -106,7 +184,7 @@ export default function PaymentScreen() {
                   <Input
                     placeholder="MM/YY"
                     value={expiryDate}
-                    onChangeText={(text) => setExpiryDate(formatExpiryDate(text))}
+                    onChangeText={(text: string) => setExpiryDate(formatExpiryDate(text))}
                     keyboardType="numeric"
                     maxLength={5}
                   />
@@ -116,7 +194,7 @@ export default function PaymentScreen() {
                   <Input
                     placeholder="123"
                     value={cvv}
-                    onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 3))}
+                    onChangeText={(text: string) => setCvv(text.replace(/\D/g, '').slice(0, 3))}
                     keyboardType="numeric"
                     maxLength={3}
                     secureTextEntry
