@@ -56,7 +56,9 @@ export default function RootLayout() {
           headerShown: false,
         }}>
           <Stack.Screen name="index" />
-          <Stack.Screen name="payment" />
+          <Stack.Screen name="CheckoutScreen" />
+          <Stack.Screen name="CheckoutHistoryScreen" />
+          <Stack.Screen name="CheckoutDetailsScreen" />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack>
         <PortalHost />

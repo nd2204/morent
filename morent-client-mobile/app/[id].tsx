@@ -288,7 +288,7 @@ export default function DetailScreen() {
         <Button 
           className="w-full" 
           onPress={() => router.push({
-            pathname: '/payment',
+            pathname: '/CheckoutScreen',
             params: {
               carId: car.id,
               total: car.pricePerDay

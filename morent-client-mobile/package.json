@@ -13,6 +13,7 @@
     "postinstall": "npx tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/native": "^7.0.0",
     "@rn-primitives/avatar": "~1.1.0",
     "@rn-primitives/portal": "~1.1.0",
@@ -44,11 +45,29 @@
     "tailwindcss": "3.3.5",
     "tailwindcss-animate": "^1.0.7",
     "zustand": "^4.4.7",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "@expo/metro-runtime": "^5.0.4",
+    "@paypal/paypal-server-sdk": "^1.0.0",
+    "@react-navigation/native-stack": "^7.3.12",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.3.0",
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/react": "~19.0.10",
+    "@types/react-native": "^0.72.8",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pg": "^8.15.6",
+    "stripe": "^18.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/react": "~18.3.12",
+    "styled-components": "^6.1.17",
     "typescript": "^5.3.3"
   },
   "private": true
