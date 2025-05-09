@@ -3,7 +3,7 @@ using Morent.Application.Features.Car.DTOs;
 
 namespace Morent.Application.Features.Car.Commands;
 
-public class UpdateCarCommand : ICommand<bool>
+public class UpdateCarCommand : ICommand<Result>
 {
   public Guid Id { get; set; }
   public decimal PricePerDay { get; set; }

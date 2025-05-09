@@ -6,7 +6,7 @@ public class DateRange : ValueObject
 {
   public DateTime Start { get; }
   public DateTime End { get; }
-  public TimeSpan Duration => End - Start;
+  public TimeSpan Duration => (Start == End) ? TimeSpan.FromDays(1) : End - Start;
 
   private DateRange() {} // For EF Core
 

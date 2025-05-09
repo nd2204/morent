@@ -1,33 +1,33 @@
+using System.Text.RegularExpressions;
+
 namespace Morent.Core.ValueObjects;
 
 public class Email : ValueObject
 {
   public string Value { get; private set; }
 
-  private Email() { Value = "N/a"; }
+  private Email() {}
 
-  public Email(string value)
+  private Email(string value)
+  {
+    Value = value;
+  }
+
+  public static Result<Email> Create(string value)
   {
     if (string.IsNullOrWhiteSpace(value))
-      throw new ArgumentException("Email cannot be empty", nameof(value));
+      return Result.Invalid(new ValidationError("Email", "Email cannot be empty"));
 
     if (!IsValidEmail(value)) 
-        throw new ArgumentException("Email is not in valid format.");
+      return Result.Invalid(new ValidationError("Email", "Email is not in valid format."));
 
-    Value = value;
+    return Result.Success(new Email(value));
   }
 
   private static bool IsValidEmail(string email)
   {
-    try
-    {
-      var addr = new System.Net.Mail.MailAddress(email);
-      return addr.Address == email;
-    }
-    catch
-    {
-      return false;
-    }
+    var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$");
+    return regex.IsMatch(email);
   }
 
   public override string ToString() => Value;

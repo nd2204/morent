@@ -1,6 +1,5 @@
 ﻿global using Ardalis.Result;
 
-global using System.Reflection;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.Extensions.Configuration;
@@ -14,3 +13,5 @@ global using Morent.Core.MorentRentalAggregate;
 global using Morent.Core.MorentReviewAggregate;
 
 global using Morent.Application.Features.DTOs;
+global using Morent.Application.Features.Car.DTOs;
+global using Morent.Application.Features.User.DTOs;

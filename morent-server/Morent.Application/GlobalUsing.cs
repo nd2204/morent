@@ -14,5 +14,6 @@ global using Morent.Application.Features.DTOs;
 global using Morent.Application.Features.Car.DTOs;
 global using Morent.Application.Features.Rental.DTOs;
 global using Morent.Application.Features.Review.DTOs;
+global using Morent.Application.Features.User.DTOs;
 global using Morent.Application.Interfaces;
 global using Morent.Application.Repositories;
