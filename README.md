@@ -16,29 +16,62 @@
 
 This project follows Clean Architecture principles with a clear separation of concerns:
 
-```
-Morent/
-├── morent-server/                # Backend solution
-│   ├── Morent.Core/             # Enterprise/Domain layer
-│   │   └── Entities/            # Domain entities
-│   ├── Morent.Application/      # Application layer
-│   │   ├── Common/             # Shared components
-│   │   ├── Features/           # Use cases
-│   │   └── Interfaces/         # Port definitions
-│   ├── Morent.Infrastructure/   # Infrastructure layer
-│   │   ├── Data/              # Database implementation
-│   │   │   ├── Configs/       # Entity configurations
-│   │   │   └── Migrations/    # Database migrations
-│   │   └── Services/          # External service implementations
-│   └── Morent.WebApi/          # Web API layer
-│       └── Controllers/        # API endpoints
-└── morent-client/              # React frontend
-    ├── src/
-    │   ├── components/        # React components
-    │   ├── features/         # Feature modules
-    │   └── types/           # TypeScript definitions
-    └── public/              # Static assets
-```
+morent-server/
+│
+├── Morent.Core/                       # Domain layer - core business entities, rules, and value objects
+│   ├── MorentCarAggregate/            # Car domain models and business logic
+│   ├── MorentUserAggregate/           # User domain models and business logic
+│   ├── MorentReviewAggregate/         # Review domain models and business logic
+│   ├── MorentRentalAggregate/         # Rental domain models and business logic
+│   ├── MorentPaymentAggregate/        # Payment domain models and business logic
+│   ├── MediaAggregate/                # Media handling domain models
+│   ├── ValueObjects/                  # Reusable value objects (Money, Location, etc.)
+│   ├── Interfaces/                    # Core interfaces and abstractions
+│   ├── Exceptions/                    # Domain-specific exceptions
+│   ├── GlobalUsing.cs                 # Global using statements
+│   ├── CoreServiceExtensions.cs       # DI extensions for core services
+│   └── AssemblyReference.cs           # Assembly reference marker
+│
+├── Morent.Application/                # Application layer - use cases, commands, queries
+│   ├── Features/                      # Application features organized by domain
+│   │   ├── Car/                       # Car-related features
+│   │   │   ├── Commands/              # Create, Update, Delete car commands
+│   │   │   ├── Queries/               # Get cars queries
+│   │   │   └── DTOs/                  # Car data transfer objects
+│   │   ├── User/                      # User-related features
+│   │   ├── Rental/                    # Rental-related features
+│   │   ├── Review/                    # Review-related features
+│   │   └── Payment/                   # Payment-related features
+│   ├── Repositories/                  # Repository interfaces
+│   ├── Interfaces/                    # Application interfaces
+│   ├── Exceptions/                    # Application-specific exceptions
+│   ├── Extensions/                    # Extension methods for application layer
+│   ├── GlobalUsing.cs                 # Global using statements
+│   └── AssemblyReference.cs           # Assembly reference marker
+│
+├── Morent.Infrastructure/             # Infrastructure layer - external concerns, data access
+│   ├── Data/                          # Data access implementation
+│   │   ├── Repositories/              # Repository implementations
+│   │   ├── Configs/                   # Entity configurations for EF Core
+│   │   └── MorentDbContext.cs         # Database context
+│   ├── Services/                      # External service implementations
+│   ├── Migrations/                    # EF Core database migrations
+│   ├── Email/                         # Email service implementation
+│   ├── Settings/                      # Application settings and configuration classes
+│   ├── GlobalUsing.cs                 # Global using statements
+│   └── InfrastructureServiceExtensions.cs  # DI extensions for infrastructure services
+│
+├── Morent.WebApi/                     # Presentation layer - API controllers, Swagger, etc.
+│   ├── Controllers/                   # API controllers
+│   ├── Configurations/                # API configurations
+│   ├── Middlewares/                   # Custom middleware components
+│   ├── SeedData/                      # Seed data for development/testing
+│   ├── Properties/                    # Project properties
+│   ├── wwwroot/                       # Static web resources
+│   ├── SeedData.cs                    # Seed data initialization
+│   ├── Program.cs                     # Application entry point
+│   ├── appsettings.json               # Application settings
+│   ├── GlobalUsing.cs                 # Global using statements
 
 ## 🛠 Technology Stack
 
