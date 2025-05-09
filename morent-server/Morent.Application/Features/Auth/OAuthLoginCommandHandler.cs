@@ -41,18 +41,13 @@ public class OAuthLoginCommandHandler : ICommandHandler<OAuthLoginCommand, AuthR
 
       if (user == null)
       {
-        // Create new user
-        user = new MorentUser(
+        // Create new external user
+        user = MorentUser.CreateExternalUser(
             externalLoginInfo.FirstName + externalLoginInfo.LastName,
             externalLoginInfo.Email,
-            new Email(externalLoginInfo.Email),
-            null // No password for external auth
-            ); // No phone for external auth
-
-        // Add external login info
-        user.AddExternalLogin(
+            Email.Create(externalLoginInfo.Email).Value,
             request.Provider,
-            externalLoginInfo.ProviderKey);
+            externalLoginInfo.ProviderKey).Value;
 
         await _userRepository.AddAsync(user);
       }

@@ -30,8 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers/Car/" />
-    <Folder Include="Controllers/Rental/" />
     <Folder Include="wwwroot\uploads\images\2025\" />
   </ItemGroup>
 

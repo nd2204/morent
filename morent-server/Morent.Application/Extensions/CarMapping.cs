@@ -96,11 +96,11 @@ public static class CarMapping
 
   public static Location ToEntity(this CarLocationDto location)
   {
-    return new Location(
+    return Location.Create(
       address: location.Address,
       city: location.City,
       country: location.Country
-    );
+    ).Value;
   }
 
   public static CarImageDto ToDto(this MorentCarImage image)

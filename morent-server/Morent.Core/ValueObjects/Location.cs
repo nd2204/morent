@@ -10,7 +10,7 @@ public class Location : ValueObject
 
   private Location() { } // For EF Core
 
-  public Location(string address, string city, string country)
+  private Location(string address, string city, string country)
   {
     Guard.Against.NullOrEmpty(address, nameof(address));
     Guard.Against.NullOrEmpty(city, nameof(city));
@@ -19,6 +19,20 @@ public class Location : ValueObject
     Address = address;
     City = city;
     Country = country;
+  }
+
+  public static Result<Location> Create(string address, string city, string country)
+  {
+    if (string.IsNullOrEmpty(address))
+      return Result.Invalid(new ValidationError(nameof(address), "must not be null or empty"));
+
+    if (string.IsNullOrEmpty(city))
+      return Result.Invalid(new ValidationError(nameof(city), "must not be null or empty"));
+
+    if (string.IsNullOrEmpty(country))
+      return Result.Invalid(new ValidationError(nameof(country), "must not be null or empty"));
+
+    return Result.Success(new Location(address, city, country));
   }
 
   protected override IEnumerable<object> GetEqualityComponents()

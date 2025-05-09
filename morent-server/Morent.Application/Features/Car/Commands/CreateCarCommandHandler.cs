@@ -22,14 +22,17 @@ public class CreateCarCommandHandler : ICommandHandler<CreateCarCommand, Result<
   public async Task<Result<Guid>> Handle(CreateCarCommand command, CancellationToken cancellationToken)
   {
     var carId = Guid.NewGuid();
-    var pricePerDay = new Money(command.PricePerDay, command.Currency);
+    var pricePerDayResult = Money.Create(command.PricePerDay, command.Currency);
+
+    if (pricePerDayResult.IsInvalid())
+      return Result.Invalid(pricePerDayResult.ValidationErrors);
 
     var location = command.Location;
 
     var car = new MorentCar(
         command.ModelId,
         command.LicensePlate,
-        pricePerDay,
+        pricePerDayResult.Value,
         location.ToEntity()
         );
 

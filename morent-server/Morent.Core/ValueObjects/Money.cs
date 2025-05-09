@@ -10,48 +10,51 @@ public class Money : ValueObject
 
   private Money() { }
 
-  public Money(decimal amount, string currency = "USD")
+  private Money(decimal amount, string currency = "USD")
   {
-    if (amount < 0)
-      throw new ArgumentException("Amount cannot be negative", nameof(amount));
-
-    if (string.IsNullOrWhiteSpace(currency))
-      throw new ArgumentException("Currency cannot be empty", nameof(currency));
-
     Amount = amount;
     Currency = currency;
   }
 
-  public static Money Zero(string currency = "USD") => new Money(0, currency);
-
-  public Money Add(Money other)
+  public static Result<Money> Create(decimal amount, string currency = "USD")
   {
-    if (Currency != other.Currency)
-      throw new DomainException($"Cannot add money with different currencies: {Currency} and {other.Currency}");
+    if (amount < 0)
+      return Result.Invalid(new ValidationError(nameof(amount), "Amount cannot be negative"));
 
-    return new Money(Amount + other.Amount, Currency);
+    if (string.IsNullOrWhiteSpace(currency))
+      return Result.Invalid(new ValidationError(nameof(currency), "Currency cannot be empty"));
+
+    return Result.Success(new Money(amount, currency));
   }
 
-  public Money Subtract(Money other)
+  public static Result<Money> Zero(string currency = "USD") => Money.Create(0, currency);
+
+  public Result<Money> Add(Money other)
   {
     if (Currency != other.Currency)
-      throw new DomainException($"Cannot subtract money with different currencies: {Currency} and {other.Currency}");
+      return Result.Invalid(new ValidationError($"Cannot add money with different currencies: {Currency} and {other.Currency}"));
+
+    return Result.Success(new Money(Amount + other.Amount, Currency));
+  }
+
+  public Result<Money> Subtract(Money other)
+  {
+    if (Currency != other.Currency)
+      return Result.Invalid(new ValidationError($"Cannot subtract money with different currencies: {Currency} and {other.Currency}"));
 
     var result = Amount - other.Amount;
     if (result < 0)
-    {
-      throw new DomainException("Subtraction would result in negative amount.");
-    }
+      return Result.Invalid(new ValidationError("Subtraction would result in negative amount."));
 
-    return new Money(result, Currency);
+    return Result.Success(new Money(result, Currency));
   }
 
-  public Money Multiply(decimal factor)
+  public Result<Money> Multiply(decimal factor)
   {
     if (factor < 0)
-      throw new DomainException("Cannot multiply by negative factor.");
+      return Result.Invalid(new ValidationError("Cannot multiply by negative factor."));
 
-    return new Money(Amount * factor, Currency);
+    return Result.Success(new Money(Amount * factor, Currency));
   }
 
   public override string ToString() => $"{Amount} {Currency}";

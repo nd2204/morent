@@ -24,11 +24,9 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     private MorentUser() { }
 
     // For local authentication
-    public MorentUser(
-        string? name, string username, Email email, string? passwordHash, MorentUserRole role = MorentUserRole.Customer)
+    private MorentUser(
+        string? name, string username, Email email, string? passwordHash = null, MorentUserRole role = MorentUserRole.Customer)
     {
-        Guard.Against.NullOrEmpty(username, nameof(username));
-        Guard.Against.NullOrEmpty(passwordHash, nameof(passwordHash));
         Id = Guid.NewGuid();
         Username = username;
         Name = name ?? username;
@@ -39,37 +37,57 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
         IsActive = true;
     }
 
-    // Factory method for local user creation
-    public static Result<MorentUser> CreateLocalUser(string? name, string username, Email email, string passwordHash)
+    private static Result<MorentUser> Create(string? name, string username, Email email, string? passwordHash = null, MorentUserRole role = MorentUserRole.Customer)
     {
         if (string.IsNullOrWhiteSpace(username))
             return Result.Invalid(new ValidationError("User", "Username cannot be empty."));
 
+        var user = new MorentUser(name, username, email, passwordHash, role);
+
+        return Result.Success(user);
+
+    }
+
+    // Factory method for local user creation
+    public static Result<MorentUser> CreateLocalUser(string? name, string username, Email email, string passwordHash)
+    {
         if (string.IsNullOrWhiteSpace(passwordHash))
             return Result.Invalid(new ValidationError("User", "Password hash cannot be empty."));
 
-        var user = new MorentUser(name, username, email, passwordHash);
-        user.PasswordHash = passwordHash;
+        var createResult = Create(name, username, email, passwordHash);
+        if (createResult.IsSuccess)
+            createResult.Value.RegisterDomainEvent(new UserCreatedEvent(createResult.Value.Id));
 
-        user.RegisterDomainEvent(new UserCreatedEvent(user.Id));
+        return createResult;
+    }
 
-        return Result.Success(user);
+    public static Result<MorentUser> CreateExternalUser(string? name, string username, Email email, string provider, string providerKey)
+    {
+        if (string.IsNullOrWhiteSpace(provider))
+            return Result.Invalid(new ValidationError("User", "Provider cannot be empty."));
+
+        if (string.IsNullOrWhiteSpace(providerKey))
+            return Result.Invalid(new ValidationError("User", "Provider Key cannot be empty."));
+
+        var createResult = Create(name, username, email);
+
+        if (createResult.IsSuccess)
+        {
+            var user = createResult.Value;
+            user.AddExternalLogin(provider, providerKey);
+            user.RegisterDomainEvent(new UserCreatedEvent(user.Id));
+        }
+
+        return createResult;
     }
 
     public static Result<MorentUser> CreateAdmin(string? name, string username, Email email, string passwordHash)
     {
-        if (string.IsNullOrWhiteSpace(username))
-            return Result.Invalid(new ValidationError("User", "Username cannot be empty."));
-
         if (string.IsNullOrWhiteSpace(passwordHash))
             return Result.Invalid(new ValidationError("User", "Password hash cannot be empty."));
 
-        var user = new MorentUser(name, username, email, passwordHash, MorentUserRole.Admin);
-        user.PasswordHash = passwordHash;
-
-        user.RegisterDomainEvent(new UserCreatedEvent(user.Id));
-
-        return Result.Success(user);
+        var createResult = Create(name, username, email, passwordHash, MorentUserRole.Admin);
+        return createResult;
     }
 
     public Result UpdateProfile(string name, Guid? profileImageId)

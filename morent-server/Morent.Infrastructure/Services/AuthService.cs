@@ -113,9 +113,16 @@ public class AuthService : IAuthService
       return Result.Invalid(new ValidationError("Invalid username/email or password"));
 
     // Validate password
-    bool isPasswordValid = VerifyPassword(request.Password, user.PasswordHash!);
-    if (!isPasswordValid)
+    if (user.PasswordHash != null)
+    {
+      bool isPasswordValid = VerifyPassword(request.Password, user.PasswordHash);
+      if (!isPasswordValid)
+        return Result.Invalid(new ValidationError("Invalid username/email or password"));
+    }
+    else
+    {
       return Result.Invalid(new ValidationError("Invalid username/email or password"));
+    }
 
     // Generate auth response (access token + refresh token)
     var authResponse = GenerateAuthResponse(user);
@@ -138,9 +145,16 @@ public class AuthService : IAuthService
 
     // Create the user with hashed password
     var passwordHash = HashPassword(request.Password);
-    var email = new Core.ValueObjects.Email(request.Email);
 
-    var user = new MorentUser(request.Name, request.Username, email, passwordHash);
+    var emailCreateResult = Core.ValueObjects.Email.Create(request.Email);
+    if (emailCreateResult.IsInvalid())
+      return Result.Invalid(emailCreateResult.ValidationErrors);
+
+    var userCreateResult = MorentUser.CreateLocalUser(request.Name, request.Username, emailCreateResult.Value, passwordHash);
+    if (userCreateResult.IsInvalid())
+      return Result.Invalid(userCreateResult.ValidationErrors);
+
+    var user = userCreateResult.Value;
     await _userRepository.AddAsync(user, cancellationToken);
     await _unitOfWork.SaveChangesAsync(cancellationToken);
 

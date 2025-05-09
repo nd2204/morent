@@ -5,5 +5,8 @@ global using Morent.Application.Features.Car.DTOs;
 global using Morent.Application.Features.DTOs;
 global using Morent.Application.Features.Rental;
 global using Morent.Application.Features.Rental.DTOs;
+global using Morent.Application.Features.User.Commands;
+global using Morent.Application.Features.User.Queries;
+global using Morent.Application.Features.User.DTOs;
 global using Morent.Application.Features.Review;
 global using Morent.Application.Features.Review.DTOs;

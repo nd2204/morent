@@ -4,20 +4,23 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Morent.Application.Features.User.Commands;
+using Morent.Application.Features.User.Queries;
 using Morent.Application.Interfaces;
 
 [ApiController]
 [Route("api/users")]
 public class UserController : ControllerBase
 {
-    private readonly IUserProfileService _userProfileImageService;
+    private readonly IUserProfileService _userProfileService;
     private readonly IMediator _mediator;
 
     public UserController(IUserProfileService userProfileImageService, IMediator mediator)
     {
-        _userProfileImageService = userProfileImageService;
+        _userProfileService = userProfileImageService;
         _mediator = mediator;
     }
+
+    // Public endpoints ==========================================================
 
     [HttpGet("{userId}/profile-image")]
     [AllowAnonymous]
@@ -25,7 +28,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileImageDto>> GetUserProfileImage(Guid userId)
     {
-        var result = await _userProfileImageService.GetUserProfileImageAsync(userId);
+        var result = await _userProfileService.GetUserProfileImageAsync(userId);
         return this.ToActionResult(result);
     }
 
@@ -64,9 +67,46 @@ public class UserController : ControllerBase
             return Forbid();
         }
 
-        var result = await _userProfileImageService.RemoveUserProfileImageAsync(userId);
+        var result = await _userProfileService.RemoveUserProfileImageAsync(userId);
         return this.ToActionResult(result);
     }
+
+    // User private endpoints ====================================================
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> GetAuthorizedUserInfo()
+    {
+        var userId = GetUserGuid();
+        var result = await _mediator.Send(new GetUserByIdQuery(userId));
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("me/profile-image")]
+    [Authorize]
+    public async Task<ActionResult<UserProfileImageDto>> GetAuthorizedUserProfileImage()
+    {
+        var userId = GetUserGuid();
+        var result = await _mediator.Send(new GetUserProfileImageQuery(userId));
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("me/rentals")]
+    [Authorize]
+    public async Task<IActionResult> GetUserRentalsInfo()
+    {
+        throw new NotImplementedException();
+    }
+
+    [HttpGet("me/reviews")]
+    [Authorize]
+    public async Task<ActionResult<UserCarsReviewDto>> GetUserCarReviews()
+    {
+        throw new NotImplementedException();
+    }
+
+
+    // Private Methods ============================================================
 
     private bool IsUserAuthorized(Guid userId)
     {
@@ -77,5 +117,10 @@ public class UserController : ControllerBase
         var isAdmin = User.IsInRole("Admin");
 
         return isAdmin || (currentUserId != null && currentUserId == userId.ToString());
+    }
+
+    private Guid GetUserGuid()
+    {
+        return Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
     }
 }

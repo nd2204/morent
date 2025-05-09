@@ -1,3 +1,4 @@
+using Ardalis.Result;
 using Ardalis.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Morent.Application.Interfaces;
@@ -193,11 +194,11 @@ public class SeedData
       };
 
       // Generate a random location
-      var location = new Location(
+      var location = Location.Create(
         address: $"{random.Next(1, 999)} {Faker.Address.StreetName()}",
         city: Faker.Address.City(),
         country: Faker.Address.Country()
-      );
+      ).Value;
 
       // Generate a description based on the car model
       string description = $"Experience the {modelInfo.Year} {modelInfo.Brand} {modelInfo.ModelName}. " +
@@ -206,11 +207,13 @@ public class SeedData
                           $"It comfortably seats {modelInfo.SeatCapacity} passengers and has a capacity of {modelInfo.SeatCapacity * 15}L for luggage. " +
                           GetRandomDescription();
 
+      var pricePerDayResult = Money.Create(pricePerDay);
+
       // Create the MorentCar instance and add it to the list
       var car = new MorentCar(
         modelId: modelId,
         licensePlate: licensePlate,
-        pricePerDay: new Money(pricePerDay),
+        pricePerDay: pricePerDayResult.Value,
         currentLocation: location,
         description: description
       );
@@ -381,7 +384,7 @@ private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
     admin1 = MorentUser.CreateAdmin(
       "Admin",
       "admin",
-      new Email("admin@test.com"),
+      Email.Create("admin@test.com").Value,
       _authService.HashPassword("20102001")
     );
 

@@ -2,7 +2,7 @@ using System;
 
 namespace Morent.Application.Features.Car.Commands;
 
-public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, bool>
+public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, Result>
 {
   private readonly ICarRepository _carRepository;
   private readonly ICarImageService _carImageService;
@@ -18,29 +18,34 @@ public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, bool>
     _carImageService = carImageService;
   }
 
-  public async Task<bool> Handle(UpdateCarCommand command, CancellationToken cancellationToken)
+  public async Task<Result> Handle(UpdateCarCommand command, CancellationToken cancellationToken)
   {
     var car = await _carRepository.GetByIdAsync(command.Id, cancellationToken);
     if (car == null)
-      throw new ApplicationException($"Car with ID {command.Id} not found");
+      return Result.NotFound($"Car with ID {command.Id} not found");
 
     // Update price if provided
     if (command.PricePerDay > 0)
     {
-      var newPrice = new Money(command.PricePerDay, command.Currency);
-      car.UpdatePrice(newPrice);
+      var newPriceResult = Money.Create(command.PricePerDay, command.Currency);
+      if (newPriceResult.IsInvalid())
+        return Result.Invalid(newPriceResult.ValidationErrors);
+      car.UpdatePrice(newPriceResult.Value);
     }
 
     // Update location if provided
     if (command.Location != null)
     {
-      var newLocation = new Location(
+      var newLocationResult = Location.Create(
           command.Location.Address,
           command.Location.City,
           command.Location.Country
           );
+        
+      if (newLocationResult.IsInvalid())
+        return Result.Invalid(newLocationResult.ValidationErrors);
 
-      car.UpdateLocation(newLocation);
+      car.UpdateLocation(newLocationResult.Value);
     }
 
     // Update availability
@@ -67,6 +72,6 @@ public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, bool>
     await _carRepository.UpdateAsync(car, cancellationToken);
     await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-    return true;
+    return Result.Success();
   }
 }

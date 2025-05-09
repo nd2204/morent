@@ -1,6 +1,4 @@
-using System;
-
-namespace Morent.Core.Events;
+namespace Morent.Core.MorentReviewAggregate.Events;
 
 public class ReviewUpdatedEvent : DomainEventBase
 {

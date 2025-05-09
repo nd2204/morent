@@ -45,14 +45,14 @@ public class MorentReview : EntityBase<Guid>, IAggregateRoot
 
     Rating = rating;
     Comment = comment;
-    this.RegisterDomainEvent(new ReviewUpdatedEvent(Id, CarId, UserId, rating));
+    RegisterDomainEvent(new ReviewUpdatedEvent(Id, CarId, UserId, rating));
 
     return Result.Success();
   }
 
   public void UpdateRating(int rating)
   {
-    Guard.Against.InvalidInput(rating, nameof(rating), r => rating >= 1 || rating <= 5);
+    Guard.Against.InvalidInput(rating, nameof(rating), r => rating >= 1 && rating <= 5);
     Rating = rating;
   }
 
