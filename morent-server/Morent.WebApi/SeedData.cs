@@ -3,30 +3,26 @@ using Ardalis.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Morent.Application.Interfaces;
 using Morent.Core.MediaAggregate;
+using Morent.Core.MediaAggregate.Specifications;
 using Morent.Core.MorentCarAggregate;
+using Morent.Core.MorentRentalAggregate;
+using Morent.Core.MorentReviewAggregate;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data;
-public class SeedData
+public class SeedData(IServiceProvider service, MorentDbContext context)
 {
-  private readonly IAuthService _authService;
-  private readonly IImageStorage _imageStorage;
-  private readonly IImageService _imageService;
-  private readonly IWebHostEnvironment _env;
-  private readonly MorentDbContext _dbContext;
-  private readonly IRepository<MorentImage> _images;
+  private readonly MorentDbContext _dbContext = context;
+  private readonly IAuthService _authService = service.GetRequiredService<IAuthService>();
+  private readonly ILogger<SeedData> _logger = service.GetRequiredService<ILogger<SeedData>>();
+  private readonly IUserProfileService _userProfileService = service.GetRequiredService<IUserProfileService>();
+  private readonly IImageStorage _imageStorage = service.GetRequiredService<IImageStorage>();
+  private readonly IImageService _imageService = service.GetRequiredService<IImageService>();
+  private readonly IWebHostEnvironment _env = service.GetRequiredService<IWebHostEnvironment>();
+  private readonly IRepository<MorentImage> _images = service.GetRequiredService<IRepository<MorentImage>>();
 
-  private MorentUser admin1 = null!;
 
-  public SeedData(MorentDbContext context, IAuthService authService, IImageService imageService, IImageStorage imageStorage, IWebHostEnvironment env, IRepository<MorentImage> images)
-  {
-    _dbContext = context;
-    _imageStorage = imageStorage;
-    _authService = authService;
-    _imageService = imageService;
-    _images = images;
-    _env = env;
-  }
+  private MorentUser admin1, user1, user2, user3, user4, user5, user6;
 
   private readonly Dictionary<string, MorentCarModel> _carModels = new Dictionary<string, MorentCarModel>
   {
@@ -107,7 +103,7 @@ public class SeedData
     if (!await _dbContext.Users.AnyAsync())
     {
       await SeedUser();
-      Console.WriteLine("Users seeded successfully.");
+      _logger.LogInformation("Users seeded successfully.");
     }
 
     // Cars depends on models to be created first
@@ -115,14 +111,27 @@ public class SeedData
     {
       // Seed car models and store their database IDs
       await SeedCarModels();
-      Console.WriteLine("Car models seeded successfully.");
+      _logger.LogInformation("Car models seeded successfully.");
 
       // Finally seed cars using the saved model IDs
       await SeedCars();
-      Console.WriteLine("Cars seeded successfully.");
+      _logger.LogInformation("Cars seeded successfully.");
     }
 
     await SeedCarImages();
+
+    if (!await _dbContext.Rentals.AnyAsync())
+    {
+      await SeedRentals();
+    }
+
+    if (!await _dbContext.Reviews.AnyAsync())
+    {
+      await SeedReviews();
+    }
+
+
+    await SeedUserProfileImage();
   }
 
   private async Task SeedCarModels()
@@ -227,111 +236,145 @@ public class SeedData
   }
 
   // Add this method to your existing SeedData class
-private async Task SeedCarImages()
-{
+  private async Task SeedCarImages()
+  {
     try
     {
-        // Get all cars IDs only to minimize tracking
-        var carIds = await _dbContext.Cars
-            .Where(c => !c.Images.Any()) // Only cars without images
-            .Select(c => c.Id) // Select just the IDs
-            .ToListAsync();
+      // Get all cars IDs only to minimize tracking
+      var cars = await _dbContext.Cars
+          .Where(c => !c.Images.Any()) // Only cars without images
+          .ToListAsync();
 
-        if (!carIds.Any())
+
+      if (!cars.Any())
+      {
+        _logger.LogInformation("All cars already have images - skipping image seeding.");
+        return;
+      }
+
+      _logger.LogInformation($"Found {cars.Count} cars without images.");
+
+      // Get image IDs only
+      var imageIds = await _dbContext.Images
+          .Select(i => i.Id)
+          .ToListAsync();
+
+      if (!imageIds.Any())
+      {
+        // Upload new images if none exist
+        var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "uploads");
+        string[] filePaths = Directory.GetFiles(assetPath);
+
+        foreach (var filePath in filePaths)
         {
-            Console.WriteLine("All cars already have images - skipping image seeding.");
-            return;
+          using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+          var response = await _imageService.UploadImageAsync(new ImageUploadRequest
+          {
+            ImageData = stream,
+            FileName = Path.GetFileName(filePath),
+            ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
+          });
+          if (response != null)
+          {
+            imageIds.Add(response.Value.ImageId);
+          }
         }
+      }
 
-        Console.WriteLine($"Found {carIds.Count} cars without images.");
+      if (!imageIds.Any())
+      {
+        _logger.LogInformation("No images available for seeding.");
+        return;
+      }
 
-        // Get image IDs only
-        var imageIds = await _dbContext.Images
-            .Select(i => i.Id)
-            .ToListAsync();
+      if (!(await _imageService.GetPlaceHolderImageAsync()).IsSuccess)
+        await SeedPlaceholderImages();
 
-        if (!imageIds.Any())
+      // Process cars one by one with clear context between operations
+      var random = new Random();
+      int successCount = 0;
+      int failureCount = 0;
+
+      foreach (var car in cars)
+      {
+        try
         {
-            // Upload new images if none exist
-            var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "uploads");
-            string[] filePaths = Directory.GetFiles(assetPath);
+          // Clear the change tracker before each operation
+          _dbContext.ChangeTracker.Clear();
 
-            foreach (var filePath in filePaths)
+          var fileName = $"{car.CarModel.Brand.ToLower()}-{car.CarModel.ModelName.ToLower()}-1.png";
+          var image = await _images.FirstOrDefaultAsync(new ImageByFileNameSpec(fileName));
+          if (image != null)
+          {
+            _logger.LogInformation($"Images with name {fileName} found: {image.Path}");
+            var filePath = Path.Combine(_env.WebRootPath, "uploads", image.Path);
+            if (File.Exists(filePath))
             {
-                using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-                var response = await _imageService.UploadImageAsync(new ImageUploadRequest
-                {
-                    ImageData = stream,
-                    FileName = Path.GetFileName(filePath),
-                    ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
-                });
-                if (response != null)
-                {
-                    imageIds.Add(response.Value.ImageId);
-                }
+              await AssignCarImageDirectly(car.Id, image.Id);
+              successCount++;
             }
+          }
+          else
+          {
+            _logger.LogInformation($"No images with name {fileName} found. Assigning random");
+            int index = random.Next(imageIds.Count);
+            var imageId = imageIds[index];
+            await AssignCarImageDirectly(car.Id, imageId);
+            successCount++;
+          }
         }
-
-        if (!imageIds.Any())
+        catch (Exception ex)
         {
-            Console.WriteLine("No images available for seeding.");
-            return;
+          failureCount++;
+          _logger.LogInformation($"Failed to assign image to car ID: {car.Id}. Error: {ex.Message}");
         }
+      }
 
-        // Process cars one by one with clear context between operations
-        var random = new Random();
-        int successCount = 0;
-        int failureCount = 0;
-
-        foreach (var carId in carIds)
-        {
-            try
-            {
-                // Clear the change tracker before each operation
-                _dbContext.ChangeTracker.Clear();
-                
-                int index = random.Next(imageIds.Count);
-                var imageId = imageIds[index];
-                
-                // Direct database approach to avoid concurrency issues
-                await AssignCarImageDirectly(carId, imageId);
-                successCount++;
-            }
-            catch (Exception ex)
-            {
-                failureCount++;
-                Console.WriteLine($"Failed to assign image to car ID: {carId}. Error: {ex.Message}");
-            }
-        }
-
-        Console.WriteLine($"Car image seeding completed. Success: {successCount}, Failures: {failureCount}");
+      _logger.LogInformation($"Car image seeding completed. Success: {successCount}, Failures: {failureCount}");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error seeding car images: {ex.Message}");
-        throw; // Rethrow to allow the calling code to handle it
+      _logger.LogInformation($"Error seeding car images: {ex.Message}");
+      throw; // Rethrow to allow the calling code to handle it
     }
     finally
     {
-      // await _imageStorage.CleanupOrphanedImages(_images);
+      await CleanupOrphanedImages();
     }
-}
+  }
 
-// New method to directly insert car image records
-private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
-{
+  private async Task SeedPlaceholderImages()
+  {
+    var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "placeholder");
+    string[] filePaths = Directory.GetFiles(assetPath);
+
+    foreach (var filePath in filePaths)
+    {
+      using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+      var response = await _imageService.UploadImageAsync(new ImageUploadRequest
+      {
+        ImageData = stream,
+        FileName = Path.GetFileName(filePath),
+        ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
+      });
+    }
+  }
+
+  // New method to directly insert car image records
+  private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
+  {
     // Check if the car exists
     bool carExists = await _dbContext.Cars.AnyAsync(c => c.Id == carId);
     if (!carExists)
     {
-        throw new ApplicationException($"Car with ID {carId} not found");
+      throw new ApplicationException($"Car with ID {carId} not found");
     }
 
     // Check if the image exists
     bool imageExists = await _dbContext.Images.AnyAsync(i => i.Id == imageId);
     if (!imageExists)
     {
-        throw new ApplicationException($"Image with ID {imageId} not found");
+      throw new ApplicationException($"Image with ID {imageId} not found");
     }
 
     // Check if this car already has a primary image
@@ -344,23 +387,23 @@ private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
         .Where(ci => ci.CarId == carId)
         .Select(ci => (int?)ci.DisplayOrder)
         .MaxAsync() ?? 0;
-    
+
     nextDisplayOrder = maxOrder + 1;
 
     // Create new car image entity directly
     var carImage = new MorentCarImage(carId, imageId, !hasPrimaryImage, nextDisplayOrder);
-    
+
     // If this will be primary and there are existing primary images, update them first
     if (!hasPrimaryImage)
     {
-        // This will be the first image, so it will be primary
-        // No need to update other images
+      // This will be the first image, so it will be primary
+      // No need to update other images
     }
-    
+
     // Add the new car image
     _dbContext.CarImages.Add(carImage);
     await _dbContext.SaveChangesAsync();
-}
+  }
 
   private static string GetContentTypeFromExtension(string extension)
   {
@@ -382,14 +425,67 @@ private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
     }
 
     admin1 = MorentUser.CreateAdmin(
-      "Admin",
+      "Morent LLC",
       "admin",
       Email.Create("admin@test.com").Value,
       _authService.HashPassword("20102001")
     );
 
-    _dbContext.Users.Add(admin1);
+    user1 = MorentUser.CreateLocalUser(
+      name: "Alex Thomson",
+      username: "alexts",
+      email: Email.Create("alexts@morent.com"),
+      passwordHash: _authService.HashPassword("alextsmorentcom")
+    );
+
+    user2 = MorentUser.CreateLocalUser(
+      name: "Sarah Chen",
+      username: "sarahchen",
+      email: Email.Create("sarahchen@morent.com"),
+      passwordHash: _authService.HashPassword("sarahchenmorentco")
+    );
+
+    user3 = MorentUser.CreateLocalUser(
+      name: "Mike Johnson",
+      username: "mikejohnson",
+      email: Email.Create("mikejohnson@morent.com"),
+      passwordHash: _authService.HashPassword("mikejohnsonmorentco")
+    );
+
+    user4 = MorentUser.CreateLocalUser(
+      name: "David Wilson",
+      username: "davidwilson",
+      email: Email.Create("davidwilson@morent.com"),
+      passwordHash: _authService.HashPassword("davidwilsonmorentco")
+    );
+
+    user5 = MorentUser.CreateLocalUser(
+      name: "Lisa Anderson",
+      username: "lisaanderson",
+      email: Email.Create("lisaanderson@morent.com"),
+      passwordHash: _authService.HashPassword("lisaandersonmorentco")
+    );
+
+    user6 = MorentUser.CreateLocalUser(
+      name: "Emily Parker",
+      username: "emilyparker",
+      email: Email.Create("emilyparker@morent.com"),
+      passwordHash: _authService.HashPassword("lisaandersonmorentco")
+    );
+
+    _dbContext.Users.AddRange(admin1, user1, user2, user3, user4, user5, user6);
     await _dbContext.SaveChangesAsync();
+  }
+
+  private async Task SeedUserProfileImage()
+  {
+    var userWithoutImages = await _dbContext.Users.Where(u => !u.ProfileImageId.HasValue).ToListAsync();
+    foreach (var user in userWithoutImages)
+    {
+      // only seed user with morent email
+      if (user.Email.ToString().EndsWith("@morent.com"))
+      await _userProfileService.UpdateUserProfileImageAsync(user.Id, $"https://i.pravatar.cc/150?u={user.Name.Split(" ")[0].ToLower()}");
+    }
   }
 
   private string GetRandomLetters(int count)
@@ -398,6 +494,414 @@ private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
     const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     return new string(Enumerable.Repeat(chars, count)
       .Select(s => s[random.Next(s.Length)]).ToArray());
+  }
+
+  private async Task SeedReviews()
+  {
+    // Skip if reviews already exist
+    if (await _dbContext.Reviews.AnyAsync())
+    {
+      _logger.LogInformation("Reviews already exist - skipping review seeding.");
+      return;
+    }
+
+    _logger.LogInformation("Starting review seeding...");
+
+    var userService = service.GetRequiredService<IUserService>();
+    var random = new Random();
+
+    // Get all completed rentals that don't have reviews yet
+    var completedRentals = await _dbContext.Rentals
+        .Where(r => r.Status == MorentRentalStatus.Completed)
+        .ToListAsync();
+
+    if (!completedRentals.Any())
+    {
+      _logger.LogInformation("No completed rentals available for review seeding.");
+      return;
+    }
+
+    _logger.LogInformation($"Found {completedRentals.Count} completed rentals for review seeding.");
+
+    // About 70% of completed rentals will have reviews
+    int reviewCount = (int)(completedRentals.Count * 0.7);
+    int successCount = 0;
+    int failureCount = 0;
+
+    // Common review phrases
+    var positiveComments = new[]
+    {
+        "Great car! Very clean and ran perfectly.",
+        "Excellent condition and very comfortable for our trip.",
+        "The car was amazing! Would definitely rent again.",
+        "Perfect vehicle for our vacation. Very spacious and fuel-efficient.",
+        "The car was delivered on time and in pristine condition.",
+        "Smooth ride and excellent handling. Very satisfied!",
+        "The car exceeded my expectations. Great experience overall.",
+        "Very reliable vehicle with good gas mileage.",
+        "Clean, well-maintained car. No issues whatsoever.",
+        "Luxury experience at a reasonable price. Highly recommended!"
+    };
+
+    var mixedComments = new[]
+    {
+        "Good car overall, though it had a few minor issues.",
+        "Decent vehicle for the price. Nothing extraordinary but got the job done.",
+        "Car was clean but not as fuel-efficient as expected.",
+        "Good experience overall, but pickup process was a bit slow.",
+        "The car served its purpose well, but the AC wasn't working properly.",
+        "Good value, but there were some minor mechanical issues.",
+        "Car was okay, but had some scratches that weren't listed.",
+        "Decent experience. The car was a bit older than expected.",
+        "Generally satisfied, though the interior showed signs of wear.",
+        "Car worked fine but wasn't as clean as I expected."
+    };
+
+    var negativeComments = new[]
+    {
+        "Car had several issues that weren't disclosed beforehand.",
+        "Not satisfied with the cleanliness of the vehicle.",
+        "Several mechanical problems during our trip. Not recommended.",
+        "The car was much older than advertised.",
+        "Poor condition and unreliable. Had to call roadside assistance.",
+        "Disappointing experience. The car broke down during our trip.",
+        "Vehicle was not properly maintained. Had safety concerns.",
+        "Car was delivered late and dirty. Very disappointing.",
+        "Terrible fuel economy and uncomfortable seats.",
+        "Many undisclosed issues with the car. Would not rent again."
+    };
+
+    // Shuffle completed rentals to randomize which ones get reviews
+    var shuffledRentals = completedRentals.OrderBy(x => random.Next()).Take(reviewCount).ToList();
+
+    foreach (var rental in shuffledRentals)
+    {
+      try
+      {
+        // Generate random rating (1-5)
+        // Weighted distribution: 5★: 40%, 4★: 30%, 3★: 15%, 2★: 10%, 1★: 5%
+        int rating;
+        double ratingRoll = random.NextDouble();
+        if (ratingRoll < 0.05) rating = 1;
+        else if (ratingRoll < 0.15) rating = 2;
+        else if (ratingRoll < 0.30) rating = 3;
+        else if (ratingRoll < 0.60) rating = 4;
+        else rating = 5;
+
+        // Select appropriate comment based on rating
+        string comment;
+        if (rating >= 4)
+        {
+          comment = positiveComments[random.Next(positiveComments.Length)];
+        }
+        else if (rating >= 3)
+        {
+          comment = mixedComments[random.Next(mixedComments.Length)];
+        }
+        else
+        {
+          comment = negativeComments[random.Next(negativeComments.Length)];
+        }
+
+        // Add some custom details to make reviews more unique
+        if (random.NextDouble() > 0.7)
+        {
+          var additionalDetails = new[]
+          {
+                    " The pickup and dropoff process was seamless.",
+                    " Would definitely recommend this car.",
+                    " Perfect for a family trip.",
+                    " Great for city driving.",
+                    " Ideal for long road trips.",
+                    " The owner was very helpful and responsive.",
+                    " The car was very fuel efficient.",
+                    " Loved the entertainment system.",
+                    " The GPS was very helpful during our trip.",
+                    " All the features worked flawlessly."
+                };
+
+          comment += additionalDetails[random.Next(additionalDetails.Length)];
+        }
+
+        // Create review
+        var reviewResult = await userService.LeaveReviewAsync(
+            rental.UserId,
+            rental.Id,
+            rating,
+            comment,
+            CancellationToken.None
+        );
+
+        if (reviewResult.IsSuccess)
+        {
+          successCount++;
+        }
+        else
+        {
+          _logger.LogError($"Failed to create review: {string.Join(", ", reviewResult.Errors)}");
+          failureCount++;
+        }
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError($"Error creating review: {ex.Message}");
+        failureCount++;
+      }
+    }
+
+    _logger.LogInformation("Review seeding completed. Created {0} reviews. Failed: {1}", successCount, failureCount);
+  }
+
+  private async Task SeedRentals()
+  {
+    // Skip if rentals already exist
+    if (await _dbContext.Rentals.AnyAsync())
+    {
+      _logger.LogInformation("Rentals already exist - skipping rental seeding.");
+      return;
+    }
+
+    _logger.LogInformation("Starting rental seeding...");
+
+    var userService = service.GetRequiredService<IUserService>();
+    var random = new Random();
+
+    // Get all users and cars to create rentals
+    var users = await _dbContext.Users
+        .Where(u => u.Role != MorentUserRole.Admin) // Only regular users, not admins
+        .ToListAsync();
+
+    var cars = await _dbContext.Cars
+        .Include(c => c.CarModel)
+        .ToListAsync();
+
+    if (!users.Any() || !cars.Any())
+    {
+      _logger.LogInformation("No users or cars available for rental seeding.");
+      return;
+    }
+
+    _logger.LogInformation($"Found {users.Count} users and {cars.Count} cars for rental seeding.");
+
+    // Create a list to track which cars are rented in which periods
+    var carRentalPeriods = new Dictionary<Guid, List<DateRange>>();
+    foreach (var car in cars)
+    {
+      carRentalPeriods[car.Id] = new List<DateRange>();
+    }
+
+    // Generate between 50-80 rentals with various statuses
+    int totalRentals = random.Next(50, 81);
+    int successCount = 0;
+    int failureCount = 0;
+
+    // Status distribution: 60% completed, 20% active, 10% confirmed, 10% reserved
+    int completedTarget = (int)(totalRentals * 0.6);
+    int activeTarget = (int)(totalRentals * 0.2);
+    int confirmedTarget = (int)(totalRentals * 0.1);
+    int reservedTarget = totalRentals - completedTarget - activeTarget - confirmedTarget;
+
+    int completedCount = 0;
+    int activeCount = 0;
+    int confirmedCount = 0;
+    int reservedCount = 0;
+
+    _logger.LogInformation($"Target rental counts - Total: {totalRentals}, Completed: {completedTarget}, " +
+                     $"Active: {activeTarget}, Confirmed: {confirmedTarget}, Reserved: {reservedTarget}");
+
+    for (int i = 0; i < totalRentals; i++)
+    {
+      try
+      {
+        // Select random user and car
+        var user = users[random.Next(users.Count)];
+        var car = cars[random.Next(cars.Count)];
+
+        // Define rental period params based on status goal
+        DateTime pickupDate;
+        DateTime dropoffDate;
+        MorentRentalStatus targetStatus;
+
+        // Determine which status to create based on current counts
+        if (completedCount < completedTarget)
+        {
+          // Completed rentals are in the past
+          pickupDate = DateTime.UtcNow.AddDays(-random.Next(30, 120));
+          dropoffDate = pickupDate.AddDays(random.Next(1, 14));
+          targetStatus = MorentRentalStatus.Completed;
+          completedCount++;
+        }
+        else if (activeCount < activeTarget)
+        {
+          // Active rentals started in the past but end in the future
+          pickupDate = DateTime.UtcNow.AddDays(-random.Next(1, 7));
+          dropoffDate = DateTime.UtcNow.AddDays(random.Next(1, 14));
+          targetStatus = MorentRentalStatus.Active;
+          activeCount++;
+        }
+        else if (confirmedCount < confirmedTarget)
+        {
+          // Confirmed rentals are in the near future
+          pickupDate = DateTime.UtcNow.AddDays(random.Next(1, 14));
+          dropoffDate = pickupDate.AddDays(random.Next(1, 14));
+          targetStatus = MorentRentalStatus.Confirmed;
+          confirmedCount++;
+        }
+        else
+        {
+          // Reserved rentals are further in the future
+          pickupDate = DateTime.UtcNow.AddDays(random.Next(14, 60));
+          dropoffDate = pickupDate.AddDays(random.Next(1, 14));
+          targetStatus = MorentRentalStatus.Reserved;
+          reservedCount++;
+        }
+
+        // Create rental period
+        var rentalPeriod = DateRange.Create(pickupDate, dropoffDate).Value;
+
+        // Check if car is already booked for this period
+        bool conflictExists = carRentalPeriods[car.Id].Any(period => period.Overlaps(rentalPeriod));
+        if (conflictExists)
+        {
+          // Try again with a different period up to 3 times
+          int attempts = 0;
+          while (conflictExists && attempts < 3)
+          {
+            // Adjust the dates slightly
+            pickupDate = pickupDate.AddDays(random.Next(3, 10));
+            dropoffDate = pickupDate.AddDays(random.Next(1, 14));
+            rentalPeriod = DateRange.Create(pickupDate, dropoffDate).Value;
+
+            conflictExists = carRentalPeriods[car.Id].Any(period => period.Overlaps(rentalPeriod));
+            attempts++;
+          }
+
+          // If still conflicts, skip this rental
+          if (conflictExists)
+          {
+            i--; // Try again with different car/user
+            continue;
+          }
+        }
+
+        // Create random locations
+        var cities = new[] { "New York", "Los Angeles", "Chicago", "Miami", "Seattle", "Boston", "Austin", "San Francisco", "Denver", "Philadelphia" };
+        var pickupCity = cities[random.Next(cities.Length)];
+        var dropoffCity = random.NextDouble() > 0.7 ? cities[random.Next(cities.Length)] : pickupCity; // 30% chance of different city
+
+        var pickupAddress = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}";
+        var dropoffAddress = dropoffCity == pickupCity && random.NextDouble() > 0.5 ?
+                            pickupAddress : $"{random.Next(100, 9999)} {Faker.Address.StreetName()}";
+
+        // Create request DTO
+        var rentalRequest = new CreateRentalRequest
+        {
+          CarId = car.Id,
+          PickupDate = pickupDate,
+          DropoffDate = dropoffDate,
+          PickupLocation = new CarLocationDto
+          {
+            City = pickupCity,
+            Address = pickupAddress,
+            Country = "North America"
+          },
+          DropoffLocation = new CarLocationDto
+          {
+            City = dropoffCity,
+            Address = dropoffAddress,
+            Country = "North America"
+          },
+        };
+
+        // Create rental
+        var rentalResult = await userService.CreateRentalAsync(user.Id, car.Id, rentalRequest);
+
+        if (!rentalResult.IsSuccess)
+        {
+          _logger.LogInformation($"Failed to create rental: {string.Join(", ", rentalResult.Errors)}");
+          failureCount++;
+          i--; // Try again
+          continue;
+        }
+
+        // Add the period to car's rental periods to track conflicts
+        carRentalPeriods[car.Id].Add(rentalPeriod);
+
+        // Modify status based on target status
+        if (targetStatus != MorentRentalStatus.Reserved)
+        {
+          // Get the created rental
+          var rental = await _dbContext.Rentals
+              .FirstOrDefaultAsync(r => r.Id == rentalResult.Value.Id);
+
+          if (rental != null)
+          {
+            // Progress the rental through each state as needed
+            if (targetStatus == MorentRentalStatus.Confirmed ||
+                targetStatus == MorentRentalStatus.Active ||
+                targetStatus == MorentRentalStatus.Completed)
+            {
+              rental.ConfirmRental();
+            }
+
+            if (targetStatus == MorentRentalStatus.Active ||
+                targetStatus == MorentRentalStatus.Completed)
+            {
+              rental.StartRental();
+            }
+
+            if (targetStatus == MorentRentalStatus.Completed)
+            {
+              rental.CompleteRental();
+            }
+
+            await _dbContext.SaveChangesAsync();
+          }
+        }
+
+        successCount++;
+
+        // Add some cancellations (about 10% of total attempts)
+        if (random.NextDouble() < 0.1)
+        {
+          // Create an extra rental that will be cancelled
+          var cancelRentalResult = await userService.CreateRentalAsync(user.Id, car.Id, new CreateRentalRequest
+          {
+            CarId = car.Id,
+            PickupDate = DateTime.UtcNow.AddDays(random.Next(7, 30)),
+            DropoffDate = DateTime.UtcNow.AddDays(random.Next(31, 45)),
+            PickupLocation = new CarLocationDto
+            {
+              City = cities[random.Next(cities.Length)],
+              Address = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}",
+              Country = "North America"
+            },
+            DropoffLocation = new CarLocationDto
+            {
+              City = cities[random.Next(cities.Length)],
+              Address = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}",
+              Country = "North America"
+            }
+          });
+
+          if (cancelRentalResult.IsSuccess)
+          {
+            // Cancel the rental
+            await userService.CancelRentalAsync(user.Id, cancelRentalResult.Value.Id);
+            successCount++;
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        _logger.LogInformation($"Error creating rental: {ex.Message}");
+        failureCount++;
+      }
+    }
+
+    _logger.LogInformation($"Rental seeding completed. Created {successCount} rentals. Failed: {failureCount}");
+    _logger.LogInformation($"Status breakdown - Completed: {completedCount}, Active: {activeCount}, " +
+                     $"Confirmed: {confirmedCount}, Reserved: {reservedCount}");
   }
 
   private string GetRandomDescription()
@@ -415,5 +919,82 @@ private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
       "Experience unmatched luxury and power. This vehicle redefines premium driving."
     };
     return descriptions[new Random().Next(descriptions.Length)];
+  }
+
+  public async Task CleanupOrphanedImages()
+  {
+    try
+    {
+      _logger.LogInformation("Starting orphaned image cleanup...");
+
+      // Get the uploads directory path
+      string uploadsDirectory = Path.Combine(_env.WebRootPath, "uploads");
+      if (!Directory.Exists(uploadsDirectory))
+      {
+        _logger.LogInformation("Uploads directory does not exist. Nothing to clean up.");
+        return;
+      }
+
+      // Get all files in the uploads directory
+      var filesOnDisk = Directory.GetFiles(uploadsDirectory, "*.*", SearchOption.AllDirectories)
+          .Select(file => Path.GetRelativePath(uploadsDirectory, file).Replace("\\", "/"))
+          .ToList();
+
+      _logger.LogInformation($"Found {filesOnDisk.Count} files on disk in uploads directory.");
+
+      // Get all image filenames from the database
+      var imagesInDb = (await _images.ListAsync()).AsQueryable()
+          .Select(img => img.Path)
+          .ToList();
+
+      _logger.LogInformation($"Found {imagesInDb.Count} images registered in database.");
+
+      // Find files that exist on disk but not in the database
+      var orphanedPersistedFiles = filesOnDisk.Except(imagesInDb).ToList();
+      // Find files that exist on database but not in the disk
+      var orphanedDatabaseFiles = imagesInDb.Except(filesOnDisk).ToList();
+
+      _logger.LogInformation($"Found {orphanedDatabaseFiles.Count} database image files to delete.");
+
+      foreach (var fileName in orphanedDatabaseFiles)
+      {
+        try
+        {
+          string filePath = Path.Combine(uploadsDirectory, fileName);
+          if (!File.Exists(filePath))
+          {
+            await _images.DeleteRangeAsync(new ImageByPathSpec(fileName));
+            _logger.LogInformation($"Deleted orphaned database images: {fileName}");
+          }
+        }
+        catch (Exception ex)
+        {
+          _logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
+        }
+      }
+
+      _logger.LogInformation($"Found {orphanedPersistedFiles.Count} orphaned image files to delete.");
+
+      foreach (var fileName in orphanedPersistedFiles)
+      {
+        try
+        {
+          string filePath = Path.Combine(uploadsDirectory, fileName);
+          if (File.Exists(filePath))
+          {
+            File.Delete(filePath);
+            _logger.LogInformation($"Deleted orphaned file: {fileName}");
+          }
+        }
+        catch (Exception ex)
+        {
+          _logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
+        }
+      }
+    }
+    catch (Exception ex)
+    {
+      _logger.LogInformation($"Error during image cleanup: {ex.Message}");
+    }
   }
 }

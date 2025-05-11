@@ -4,7 +4,7 @@ using Morent.Core.MediaAggregate;
 
 namespace Morent.Core.MorentCarAggregate;
 
-public class MorentCarImage : EntityBase<Guid>
+public class MorentCarImage : EntityBase<int>
 {
   public Guid CarId { get; private set; }
   public Guid ImageId { get; private set; }
@@ -13,7 +13,6 @@ public class MorentCarImage : EntityBase<Guid>
 
   public MorentCarImage(Guid carId, Guid imageId, bool isPrimary, int displayOrder)
   {
-    Id = Guid.NewGuid();
     CarId = carId;
     ImageId = imageId;
     IsPrimary = isPrimary;

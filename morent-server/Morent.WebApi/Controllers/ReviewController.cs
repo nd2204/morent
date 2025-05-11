@@ -32,15 +32,13 @@ public class ReviewController : ControllerBase
 
     [Authorize]
     [HttpPost("car/{carId:guid}")]
-    public async Task<ActionResult<Guid>> LeaveReview(Guid carId, [FromBody] LeaveReviewRequest request)
+    public async Task<ActionResult<ReviewDto>> LeaveReview(Guid carId, [FromBody] LeaveReviewRequest request)
     {
         var result = await _mediator.Send(new LeaveReviewCommand
         {
             UserId = GetUserIdFromAuth(),
             CarId = carId,
-            RentalId = request.RentalId,
-            Rating = request.Rating,
-            Comment = request.Comment
+            Request = request
         });
         return this.ToActionResult(result);
     }

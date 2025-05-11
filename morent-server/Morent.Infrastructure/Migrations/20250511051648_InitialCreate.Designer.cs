@@ -12,7 +12,7 @@ using Morent.Infrastructure.Data;
 namespace Morent.Infrastructure.Migrations
 {
     [DbContext(typeof(MorentDbContext))]
-    [Migration("20250501163728_InitialCreate")]
+    [Migration("20250511051648_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -113,9 +113,9 @@ namespace Morent.Infrastructure.Migrations
 
             modelBuilder.Entity("Morent.Core.MorentCarAggregate.MorentCarImage", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CarId")
                         .HasColumnType("TEXT");
@@ -257,22 +257,19 @@ namespace Morent.Infrastructure.Migrations
 
                             b1.Property<string>("Address")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupAddress");
+                                .HasColumnName("DropoffAddress");
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupCity");
+                                .HasColumnName("DropoffCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(200)
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupCountry");
+                                .HasColumnName("DropoffCountry");
                         });
 
                     b.ComplexProperty<Dictionary<string, object>>("PickupLocation", "Morent.Core.MorentRentalAggregate.MorentRental.PickupLocation#Location", b1 =>
@@ -281,19 +278,16 @@ namespace Morent.Infrastructure.Migrations
 
                             b1.Property<string>("Address")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasColumnType("TEXT")
                                 .HasColumnName("PickupAddress");
 
                             b1.Property<string>("City")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasColumnType("TEXT")
                                 .HasColumnName("PickupCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .ValueGeneratedOnUpdateSometimes()
                                 .HasMaxLength(200)
                                 .HasColumnType("TEXT")
                                 .HasColumnName("PickupCountry");
@@ -345,7 +339,8 @@ namespace Morent.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("CarId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CarId");
 
                     b.Property<string>("Comment")
                         .IsRequired()
@@ -353,9 +348,6 @@ namespace Morent.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("MorentCarId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Rating")
@@ -367,8 +359,6 @@ namespace Morent.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CarId");
-
-                    b.HasIndex("MorentCarId");
 
                     b.HasIndex("UserId");
 
@@ -425,6 +415,9 @@ namespace Morent.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProfileImageId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -491,21 +484,21 @@ namespace Morent.Infrastructure.Migrations
 
             modelBuilder.Entity("Morent.Core.MorentReviewAggregate.MorentReview", b =>
                 {
-                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
-                        .WithMany()
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", "Car")
+                        .WithMany("Reviews")
                         .HasForeignKey("CarId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
+                    b.HasOne("Morent.Core.MorentUserAggregate.MorentUser", "User")
                         .WithMany("Reviews")
-                        .HasForeignKey("MorentCarId");
-
-                    b.HasOne("Morent.Core.MorentUserAggregate.MorentUser", null)
-                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Car");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Morent.Core.MorentUserAggregate.MorentUser", b =>
@@ -592,6 +585,11 @@ namespace Morent.Infrastructure.Migrations
 
                     b.Navigation("Rentals");
 
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentUserAggregate.MorentUser", b =>
+                {
                     b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618

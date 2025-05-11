@@ -38,7 +38,8 @@ public static class InfrastructureServiceExtensions
 
             .AddScoped<IImageService, ImageService>()
             .AddScoped<ICarImageService, CarImageService>()
-            .AddScoped<IUserProfileService, UserProfileService>()
+            .AddScoped<IUserProfileService, UserService>()
+            .AddScoped<IUserService, UserService>()
             ;
 
         logger.LogInformation("{Project} registered", "Infrastructure services");

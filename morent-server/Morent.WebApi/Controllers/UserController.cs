@@ -93,16 +93,20 @@ public class UserController : ControllerBase
 
     [HttpGet("me/rentals")]
     [Authorize]
-    public async Task<IActionResult> GetUserRentalsInfo()
+    public async Task<ActionResult<IEnumerable<RentalDto>>> GetUserRentalsInfo()
     {
-        throw new NotImplementedException();
+        var userId = GetUserGuid();
+        var result = await _mediator.Send(new GetUserRentalsQuery(userId, null));
+        return this.ToActionResult(result);
     }
 
     [HttpGet("me/reviews")]
     [Authorize]
-    public async Task<ActionResult<UserCarsReviewDto>> GetUserCarReviews()
+    public async Task<ActionResult<IEnumerable<UserCarsReviewDto>>> GetUserReviews()
     {
-        throw new NotImplementedException();
+        var userId = GetUserGuid();
+        var result = await _mediator.Send(new GetUserReviewsQuery(userId));
+        return this.ToActionResult(result);
     }
 
 

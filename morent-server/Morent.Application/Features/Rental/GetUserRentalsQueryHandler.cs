@@ -3,7 +3,7 @@ using Morent.Core.Exceptions;
 
 namespace Morent.Application.Features.Rental;
 
-public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEnumerable<RentalDto>>
+public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, Result<IEnumerable<RentalDto>>>
 {
   private readonly IRentalRepository _rentalRepository;
   private readonly ICarRepository _carRepository;
@@ -16,7 +16,7 @@ public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEn
     _carRepository = carRepository;
   }
 
-  public async Task<IEnumerable<RentalDto>> Handle(GetUserRentalsQuery query, CancellationToken cancellationToken)
+  public async Task<Result<IEnumerable<RentalDto>>> Handle(GetUserRentalsQuery query, CancellationToken cancellationToken)
   {
     var rentals = await _rentalRepository.GetRentalsByUserIdAsync(query.UserId, cancellationToken);
 
@@ -30,23 +30,12 @@ public class GetUserRentalsQueryHandler : IQueryHandler<GetUserRentalsQuery, IEn
     {
       var car = await _carRepository.GetByIdAsync(rental.CarId, cancellationToken);
 
-      if (car == null) throw new DomainException($"Car with Id={rental.CarId} not found!");
+      if (car == null)
+        Result.NotFound($"Car with Id {rental.CarId} not found!");
 
-      rentalDtos.Add(new RentalDto
-      {
-        Id = rental.Id,
-        CarInfo = car.ToCarDto(),
-        PickupDate = rental.RentalPeriod.Start,
-        DropoffDate = rental.RentalPeriod.End,
-        PickupLocation = rental.PickupLocation.ToDto(),
-        DropoffLocation = rental.DropoffLocation.ToDto(),
-        TotalCost = rental.TotalCost.Amount,
-        Currency = rental.TotalCost.Currency,
-        Status = rental.Status,
-        CreatedAt = rental.CreatedAt
-      });
+      rentalDtos.Add(rental.ToDto());
     }
 
-    return rentalDtos;
+    return Result.Success(rentalDtos.AsEnumerable());
   }
 }

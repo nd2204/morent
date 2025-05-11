@@ -102,7 +102,8 @@ namespace Morent.Infrastructure.Migrations
                 name: "CarImages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     CarId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ImageId = table.Column<Guid>(type: "TEXT", nullable: false),
                     IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -178,8 +179,7 @@ namespace Morent.Infrastructure.Migrations
                     CarId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Rating = table.Column<int>(type: "INTEGER", nullable: false),
                     Comment = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    MorentCarId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -190,11 +190,6 @@ namespace Morent.Infrastructure.Migrations
                         principalTable: "Cars",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Cars_MorentCarId",
-                        column: x => x.MorentCarId,
-                        principalTable: "Cars",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Reviews_Users_UserId",
                         column: x => x.UserId,
@@ -232,6 +227,9 @@ namespace Morent.Infrastructure.Migrations
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PaymentId = table.Column<Guid>(type: "TEXT", nullable: true),
                     MorentCarId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    DropoffAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    DropoffCity = table.Column<string>(type: "TEXT", nullable: false),
+                    DropoffCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     PickupAddress = table.Column<string>(type: "TEXT", nullable: false),
                     PickupCity = table.Column<string>(type: "TEXT", nullable: false),
                     PickupCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
@@ -341,11 +339,6 @@ namespace Morent.Infrastructure.Migrations
                 column: "CarId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_MorentCarId",
-                table: "Reviews",
-                column: "MorentCarId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Reviews_UserId",
                 table: "Reviews",
                 column: "UserId");
@@ -354,6 +347,12 @@ namespace Morent.Infrastructure.Migrations
                 name: "IX_Users_ProfileImageId",
                 table: "Users",
                 column: "ProfileImageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_MorentPayment_Rentals_RentalId",

@@ -16,7 +16,7 @@ public class RentalRepository : EFRepository<MorentRental>, IRentalRepository
     public async Task<IEnumerable<MorentRental>> GetRentalsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Rentals
-            // .Include(r => r.Payment)
+            .Include(r => r.Payment)
             .Where(r => r.UserId == userId)
             .ToListAsync(cancellationToken);
     }
@@ -24,7 +24,7 @@ public class RentalRepository : EFRepository<MorentRental>, IRentalRepository
     public async Task<IEnumerable<MorentRental>> GetRentalsByCarIdAsync(Guid carId, CancellationToken cancellationToken = default)
     {
         return await _context.Rentals
-            // .Include(r => r.Payment)
+            .Include(r => r.Payment)
             .Where(r => r.CarId == carId)
             .ToListAsync(cancellationToken);
     }
@@ -33,8 +33,15 @@ public class RentalRepository : EFRepository<MorentRental>, IRentalRepository
     {
         var currentDate = DateTime.UtcNow;
         return await _context.Rentals
-            // .Include(r => r.Payment)
+            .Include(r => r.Payment)
             .Where(r => r.IsActive())
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<MorentRental?> GetRentalByUserAndCarAsync(Guid userId, Guid carId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Rentals
+            .Include(r => r.Payment)
+            .FirstOrDefaultAsync(r => r.CarId == carId && r.UserId == userId);
     }
 }

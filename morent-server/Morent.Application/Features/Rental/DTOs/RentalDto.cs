@@ -2,14 +2,15 @@ namespace Morent.Application.Features.Rental.DTOs;
 
 public class RentalDto
 {
-  public Guid Id { get; set; }
-  public CarDto CarInfo { get; set; } = null!;
-  public DateTime PickupDate { get; set; }
-  public DateTime DropoffDate { get; set; }
-  public CarLocationDto PickupLocation { get; set; } = null!;
-  public CarLocationDto DropoffLocation { get; set; } = null!;
-  public decimal TotalCost { get; set; }
-  public string Currency { get; set; } = null!;
-  public MorentRentalStatus Status { get; set; }
-  public DateTime CreatedAt { get; set; }
+  public required Guid Id { get; set; }
+  public required Guid UserId { get; set; }
+  public required Guid CarId { get; set; }
+  public required DateTime PickupDate { get; set; }
+  public required DateTime DropoffDate { get; set; }
+  public required CarLocationDto PickupLocation { get; set; } = null!;
+  public required CarLocationDto DropoffLocation { get; set; } = null!;
+  public required decimal TotalCost { get; set; }
+  public required string Currency { get; set; } = null!;
+  public required string Status { get; set; }
+  public required DateTime CreatedAt { get; set; }
 }

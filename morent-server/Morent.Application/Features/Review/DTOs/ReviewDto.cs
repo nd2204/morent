@@ -2,13 +2,12 @@ namespace Morent.Application.Features.Review.DTOs;
 
 public class ReviewDto
 {
-  public Guid Id { get; set; }
-  public Guid UserId { get; set; }
-  public string UserName { get; set; } = null!;
-  public Guid CarId { get; set; }
-  public string CarDetails { get; set; } = null!;
-  public int Rating { get; set; }
-  public string Comment { get; set; } = null!;
-  public DateTime CreatedAt { get; set; }
-  public string ImageUrl { get; set; } = default!; 
+  public required Guid Id { get; set; }
+  public required Guid UserId { get; set; }
+  public required string UserName { get; set; } = null!;
+  public required Guid CarId { get; set; }
+  public required int Rating { get; set; }
+  public required string Comment { get; set; } = null!;
+  public required DateTime CreatedAt { get; set; }
+  public required string UserImageUrl { get; set; } = default!; 
 }

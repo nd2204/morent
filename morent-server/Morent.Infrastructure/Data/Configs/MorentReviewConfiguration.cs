@@ -6,24 +6,38 @@ public class MorentReviewConfiguration : IEntityTypeConfiguration<MorentReview>
 {
   public void Configure(EntityTypeBuilder<MorentReview> builder)
   {
+    // Configure primary key
     builder.HasKey(e => e.Id);
 
-    builder
-      .Navigation(r => r.User)
-      .AutoInclude();
+    // Configure User relationship
+    builder.HasOne(r => r.User)
+           .WithMany(u => u.Reviews)
+           .HasForeignKey(e => e.UserId)
+           .OnDelete(DeleteBehavior.Restrict);
 
-    builder.HasOne<MorentUser>()
-      .WithMany()
-      .HasForeignKey(e => e.UserId)
-      .OnDelete(DeleteBehavior.Restrict);
+    // Configure CarId property explicitly
+    builder.Property(e => e.CarId)
+           .IsRequired()
+           .HasColumnName("CarId");
 
-    builder.HasOne<MorentCar>()
-      .WithMany()
-      .HasForeignKey(e => e.CarId)
-      .OnDelete(DeleteBehavior.Restrict);
+    // Configure Car relationship
+    builder.HasOne(r => r.Car)
+           .WithMany(c => c.Reviews)
+           .HasForeignKey(e => e.CarId)
+           .OnDelete(DeleteBehavior.Restrict);
 
-    builder.Property(e => e.Rating).IsRequired();
-    builder.Property(e => e.Comment).HasMaxLength(1000);
-    builder.Property(e => e.CreatedAt).IsRequired();
+    // Configure other properties
+    builder.Property(e => e.Rating)
+           .IsRequired();
+
+    builder.Property(e => e.Comment)
+           .HasMaxLength(1000);
+
+    builder.Property(e => e.CreatedAt)
+           .IsRequired();
+
+    // Configure navigation (optional AutoInclude)
+    builder.Navigation(r => r.User)
+           .AutoInclude();
   }
 }

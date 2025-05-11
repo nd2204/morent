@@ -4,10 +4,10 @@ namespace Morent.Application.Features.DTOs;
 
 public class ImageDto
 {
-  public Guid Id { get; set; }
-  public string Url { get; set; } = null!;
-  public string ContentType { get; set; } = null!;
-  public string FileName { get; set; } = null!;
-  public DateTime UploadedAt { get; set; }
-  public long Size { get; set; }
+  public required Guid Id { get; set; }
+  public required string Url { get; set; } = null!;
+  public required string ContentType { get; set; } = null!;
+  public required string FileName { get; set; } = null!;
+  public required DateTime UploadedAt { get; set; }
+  public required long Size { get; set; }
 }

@@ -43,7 +43,10 @@ public static class MiddlewareConfig
     app.UseRouting();
     app.UseHsts();
     app.MapControllers();
-    app.UseCors("All");
+    app.UseCors(x => x
+      .AllowAnyOrigin()
+      .AllowAnyHeader()
+      .AllowAnyMethod());
 
     app.UseCookiePolicy();
     app.UseAuthentication();
@@ -66,14 +69,7 @@ public static class MiddlewareConfig
       var context = services.GetRequiredService<MorentDbContext>();
       //          context.Database.Migrate();
       context.Database.EnsureCreated();
-      await new SeedData(
-        context,
-        services.GetRequiredService<IAuthService>(),
-        services.GetRequiredService<IImageService>(),
-        services.GetRequiredService<IImageStorage>(),
-        services.GetRequiredService<IWebHostEnvironment>(),
-        services.GetRequiredService<IRepository<MorentImage>>()
-      ).InitializeAsync();
+      await new SeedData(services, context).InitializeAsync();
     }
     catch (Exception ex)
     {

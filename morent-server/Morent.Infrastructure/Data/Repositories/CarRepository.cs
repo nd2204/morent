@@ -94,4 +94,11 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
         .Where(c => c.Id == id)
         .SingleOrDefaultAsync();
   }
+
+  public async Task<IEnumerable<MorentRental>> GetActiveRentalsForCarAsync(Guid carId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Rentals
+        .Where(r => r.CarId == carId)
+        .ToListAsync();
+  }
 }

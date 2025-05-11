@@ -21,7 +21,6 @@ public class AuthorizationMiddleware
       {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         await context.Response.WriteAsync("Unauthorized access (authentication required)");
-        return;
       }
     }
 

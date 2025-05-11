@@ -39,7 +39,7 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
     if (car == null)
       throw new ApplicationException($"Car with ID {command.CarId} not found");
 
-    var rentalPeriod = DateRange.Create(command.PickupDate, command.DropoffDate);
+    var rentalPeriod = DateRange.Create(command.PickupDate, command.DropoffDate).Value;
 
     if (!car.IsAvailableDuring(rentalPeriod))
       throw new ApplicationException("Car is not available for the selected dates");
@@ -49,7 +49,7 @@ public class RentCarCommandHandler : ICommandHandler<RentCarCommand, Guid>
     var dropoffLocation = command.DropoffLocation.ToEntity();
 
     // Calculate total cost
-    var durationDays = rentalPeriod.Value.TotalDays();
+    var durationDays = rentalPeriod.TotalDays();
     var totalCost = car.PricePerDay.Multiply(durationDays);
 
     // Process payment
