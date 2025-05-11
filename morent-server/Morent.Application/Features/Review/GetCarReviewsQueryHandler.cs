@@ -38,8 +38,7 @@ public class GetCarReviewsQueryHandler : IQueryHandler<GetCarReviewsQuery, Paged
         UserId = review.UserId,
         UserName = user?.Name ?? "Anonymous",
         CarId = review.CarId,
-        ImageUrl = userImage.Url,
-        CarDetails = string.Empty, // Could be populated if needed
+        UserImageUrl = userImage.Url,
         Rating = review.Rating,
         Comment = review.Comment,
         CreatedAt = review.CreatedAt

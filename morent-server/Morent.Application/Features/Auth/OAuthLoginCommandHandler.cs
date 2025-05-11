@@ -63,7 +63,7 @@ public class OAuthLoginCommandHandler : ICommandHandler<OAuthLoginCommand, AuthR
     }
 
     // Generate tokens
-    var authResponse = _authService.GenerateAuthResponse(user);
+    var authResponse = await _authService.GenerateAuthResponse(user);
 
     // Add refresh token
     var refreshToken = new RefreshToken(authResponse.RefreshToken, DateTime.UtcNow.AddDays(7));

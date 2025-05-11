@@ -9,6 +9,7 @@ public static class UserMapping
     return new UserDto {
       UserId = user.Id,
       Name = user.Name,
+      ImageUrl = "",
       Email = user.Email.ToString()
     };
   }

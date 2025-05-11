@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,26 +24,26 @@ public static class ServiceConfig
       .AddMediatrConfigs()
       .AddGoogleConfigs(builder.Configuration)
       .AddJwtConfigs(builder.Configuration)
-      .AddCors(options =>
-      {
-        options.AddPolicy("AllowReactApp",
-          builder => builder.WithOrigins("http://localhost:3000") // React app URL
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-      })
-      .AddCors(options =>
-      {
-        options.AddPolicy("All", builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-      })
       .AddAuthorization()
       ;
 
     if (builder.Environment.IsDevelopment()) {
       // Use test mailing service in development
       // services.AddScoped<IEmailSender, Mime>;
+
+      var ngrok = new Process
+      {
+        StartInfo = new ProcessStartInfo
+        {
+          FileName = "ngrok",
+          Arguments = "http --url=coral-unbiased-scarcely.ngrok-free.app https://localhost:7083",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+          CreateNoWindow = false
+        }
+      };
+
+      ngrok.Start();
     }
 
     logger.LogInformation("{Project} registered", "WebApi services");

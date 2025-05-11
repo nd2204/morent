@@ -27,7 +27,7 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
     user.RevokeRefreshToken(request.RefreshToken);
 
     // Generate new tokens
-    var response = _authService.GenerateAuthResponse(user);
+    var response = await _authService.GenerateAuthResponse(user);
 
     // Add new refresh token to user
     user.AddRefreshToken(new RefreshToken(response.RefreshToken, DateTime.UtcNow.AddDays(7)));

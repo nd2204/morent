@@ -4,5 +4,5 @@ namespace Morent.Application.Features.Auth.DTOs;
 
 public class RefreshTokenRequest
 {
-  public string RefreshToken { get; set; } = null!;
+  public required string RefreshToken { get; set; } = null!;
 }

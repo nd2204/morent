@@ -20,6 +20,9 @@ public class MorentUser : EntityBase<Guid>, IAggregateRoot
     private readonly List<MorentUserOAuthLogin> _OAuthLogins = new();
     public IReadOnlyCollection<MorentUserOAuthLogin> OAuthLogins => _OAuthLogins.AsReadOnly();
 
+    private readonly List<MorentReview> _reviews = new();
+    public IReadOnlyCollection<MorentReview> Reviews => _reviews.AsReadOnly();
+
     // For EF Core
     private MorentUser() { }
 

@@ -17,9 +17,13 @@ public static class CarMapping
         ? reviewDtos.Average(r => r.Rating)
         : 0;
 
+    string carTitle = $"{car.CarModel.Brand} {car.CarModel.ModelName} {car.CarModel.Year}";
+
     return new CarDetailDto
     {
       Id = car.Id,
+      Title =  carTitle,
+      Description = car.Description ?? "N/a",
       LicensePlate = car.LicensePlate,
       PricePerDay = car.PricePerDay.Amount,
       Currency = car.PricePerDay.Currency,
@@ -33,6 +37,7 @@ public static class CarMapping
       {
         Address = car.CurrentLocation.Address,
         City = car.CurrentLocation.City,
+        Country = car.CurrentLocation.Country
       }
     };
 
@@ -44,10 +49,13 @@ public static class CarMapping
     double averageRating = reviews.Any()
         ? reviews.Average(r => r.Rating)
         : 0;
+    
+    string carTitle = $"{car.CarModel.Brand} {car.CarModel.ModelName} {car.CarModel.Year}";
 
     return new CarDto
     {
       Id = car.Id,
+      Title = carTitle,
       LicensePlate = car.LicensePlate,
       PricePerDay = car.PricePerDay.Amount,
       Currency = car.PricePerDay.Currency,
@@ -69,7 +77,9 @@ public static class CarMapping
       Year = model.Year,
       SeatCapacity = model.SeatCapacity,
       FuelType = model.FuelType.ToString(),
-      GearBox = model.Gearbox.ToString()
+      GearBox = model.Gearbox.ToString(),
+      FuelTankCapacity = model.FuelTankCapacity,
+      Type = model.CarType.ToString()
     };
   }
 
@@ -77,6 +87,10 @@ public static class CarMapping
   {
     return new ReviewDto
     {
+      Id = model.Id,
+      CarId = model.CarId,
+      UserImageUrl = "",
+      UserName = model.User.Name,
       UserId = model.UserId,
       Comment = model.Comment,
       Rating = model.Rating,
@@ -106,7 +120,8 @@ public static class CarMapping
   public static CarImageDto ToDto(this MorentCarImage image)
   {
     return new CarImageDto {
-      ImageId = image.Id,
+      ImageId = image.ImageId,
+      Url = "",
       IsPrimary = image.IsPrimary,
       DisplayOrder = image.DisplayOrder
     };

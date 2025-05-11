@@ -4,8 +4,8 @@ namespace Morent.Application.Features.User.DTOs;
 
 public class UserCarsReviewDto
 {
-  public Guid RentalId;
-  public string CarImageUrl { get; set; }
-  public int Rating;
-  public bool IsReviewed;
+  public required Guid RentalId { get; set; }
+  public required string CarImageUrl { get; set; }
+  public required int Rating { get; set; }
+  public required bool IsReviewed { get; set; }
 }

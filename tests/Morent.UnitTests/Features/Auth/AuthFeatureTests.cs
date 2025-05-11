@@ -39,7 +39,8 @@ public class AuthFeatureTests
             {
                 UserId = Guid.NewGuid(),
                 Name = "Test User",
-                Email = "test@example.com"
+                Email = "test@example.com",
+                ImageUrl = ""
             }
         };
 
@@ -80,7 +81,8 @@ public class AuthFeatureTests
             {
                 UserId = Guid.NewGuid(),
                 Name = "Test User",
-                Email = "test@example.com"
+                Email = "test@example.com",
+                ImageUrl = ""
             }
         };
 
@@ -123,7 +125,8 @@ public class AuthFeatureTests
             {
                 UserId = user.Id,
                 Name = user.Name,
-                Email = user.Email.Value
+                Email = user.Email.Value,
+                ImageUrl = ""
             }
         };
 
@@ -202,7 +205,8 @@ public class AuthFeatureTests
             {
                 UserId = Guid.NewGuid(),
                 Name = "Test User",
-                Email = "test@example.com"
+                Email = "test@example.com",
+                ImageUrl = ""
             }
         };
 

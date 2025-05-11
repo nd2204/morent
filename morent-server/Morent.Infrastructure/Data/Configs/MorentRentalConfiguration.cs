@@ -66,15 +66,15 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
     builder.ComplexProperty(r => r.DropoffLocation, location =>
     {
       location.Property(l => l.Country)
-        .HasColumnName("PickupCountry")
+        .HasColumnName("DropoffCountry")
         .HasMaxLength(200)
         .IsRequired();
 
       location.Property(l => l.Address)
-        .HasColumnName("PickupAddress");
+        .HasColumnName("DropoffAddress");
 
       location.Property(l => l.City)
-        .HasColumnName("PickupCity");
+        .HasColumnName("DropoffCity");
     });
   }
 }

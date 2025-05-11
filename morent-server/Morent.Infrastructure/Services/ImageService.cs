@@ -1,5 +1,7 @@
+using Ardalis.Specification;
 using Morent.Application.Interfaces;
 using Morent.Core.MediaAggregate;
+using Morent.Core.MediaAggregate.Specifications;
 
 namespace Morent.Infrastructure.Services;
 public class ImageService : IImageService
@@ -140,33 +142,30 @@ public class ImageService : IImageService
     return errors;
   }
 
-  private async Task<ImageUploadRequest?> FetchImageAsUploadRequest(string imageUrl)
+  public async Task<Result<ImageUploadRequest>> FetchImageAsUploadRequest(string imageUrl)
   {
     var response = await _httpClient.GetAsync(imageUrl);
     if (!response.IsSuccessStatusCode)
-      return null;
+      return Result.Error($"Failed to fetch image. StatusCode: {response.StatusCode}");
 
     var contentType = response.Content.Headers.ContentType?.MediaType;
 
     if (string.IsNullOrWhiteSpace(contentType))
-      return null;
+      return Result.Invalid(new ValidationError("Content type must not be null or empty"));
 
     if (!contentType.StartsWith("image/"))
-      return null;
+      return Result.Invalid(new ValidationError("Content type not start with image/"));
 
-    if (!response.IsSuccessStatusCode)
-      throw new Exception($"Failed to fetch image. StatusCode: {response.StatusCode}");
-
+    var imageExt = contentType.Split("/")[1];
 
     var image = await response.Content.ReadAsStreamAsync();
-    return new ImageUploadRequest
+    return Result.Success(new ImageUploadRequest
     {
       ImageData = image,
       ContentType = contentType,
-      FileName = await DetermineImageFileNameAsync(imageUrl)
-    };
+      FileName = await DetermineImageFileNameAsync(imageUrl) + $".{imageExt}"
+    });
   }
-
 
   public async Task<string> DetermineImageFileNameAsync(string imageUrl)
   {
@@ -181,7 +180,7 @@ public class ImageService : IImageService
     if (string.IsNullOrEmpty(fileName))
     {
       // 2. Fallback to URL filename
-      fileName = GetFileNameFromUrl(imageUrl);
+      fileName = $"external-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid()}";
     }
 
     return fileName;
@@ -196,8 +195,40 @@ public class ImageService : IImageService
     return null;
   }
 
-  private string GetFileNameFromUrl(string url)
+  // private string GetFileNameFromUrl(string url)
+  // {
+  //   return Path.GetFileName(new Uri(url).AbsolutePath);
+  // }
+ 
+  public async Task<Result<ImageDto>> GetPlaceHolderImageAsync()
   {
-    return Path.GetFileName(new Uri(url).AbsolutePath);
+    var placeholderImageName = "placeholder.png";
+    var image = await _imageRepository.FirstOrDefaultAsync(new ImageByFileNameSpec(placeholderImageName));
+    if (image == null)
+    {
+      return Result.NotFound($"Image with FileName {placeholderImageName} not found.");
+    }
+
+    return Result.Success(new ImageDto
+    {
+      Id = image.Id,
+      FileName = image.FileName,
+      ContentType = image.ContentType,
+      Size = image.Size,
+      UploadedAt = image.UploadedAt,
+      Url = _imageStorage.GetImageUrl(image.Path)
+    });
+  }
+
+  public async Task<Result<ImageUploadResponse>> UploadImageAsync(string imageUrl)
+  {
+    Result<ImageUploadRequest> result = await FetchImageAsUploadRequest(imageUrl);
+    if (result.IsError())
+      return Result.Error(new ErrorList(result.Errors));
+
+    if (result.IsInvalid())
+      return Result.Invalid(result.ValidationErrors);
+    
+    return await UploadImageAsync(result.Value);
   }
 }

@@ -3,7 +3,7 @@ public interface IAuthService
 {
   string GenerateJwtToken(MorentUser user);
   RefreshToken GenerateRefreshToken();
-  AuthResponse GenerateAuthResponse(MorentUser user);
+  Task<AuthResponse> GenerateAuthResponse(MorentUser user);
   string HashPassword(string password);
   bool VerifyPassword(string password, string passwordHash);
 

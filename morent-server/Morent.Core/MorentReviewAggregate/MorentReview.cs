@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Morent.Core.MorentReviewAggregate.Events;
 
 namespace Morent.Core.MorentReviewAggregate;
@@ -5,8 +6,9 @@ namespace Morent.Core.MorentReviewAggregate;
 public class MorentReview : EntityBase<Guid>, IAggregateRoot
 {
   public Guid UserId { get; private set; }
-  public MorentUser? User { get; private set; }
+  public MorentUser User { get; private set; }
   public Guid CarId { get; private set; }
+  public MorentCar Car { get; private set; }
   public int Rating { get; private set; }
   public string Comment { get; private set; }
   public DateTime CreatedAt { get; private set; }

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Ardalis.Result;
 using Ardalis.Result.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -22,11 +23,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
     {
+        Result.Invalid();
         var command = new LoginUserQuery(request.LoginId, request.Password);
         var result = await _mediator.Send(command);
 
@@ -43,7 +45,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponse>> Signup([FromBody] RegisterUserCommand request)
     {
         var command = new RegisterUserCommand(

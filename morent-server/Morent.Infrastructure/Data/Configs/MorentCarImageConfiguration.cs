@@ -8,6 +8,7 @@ public class MorentCarImageConfiguration : IEntityTypeConfiguration<MorentCarIma
   public void Configure(EntityTypeBuilder<MorentCarImage> builder)
   {
     builder.HasKey(e => e.Id);
+    builder.Property(e => e.Id).ValueGeneratedOnAdd();
     builder.Property(e => e.ImageId).IsRequired();
     builder.Property(e => e.IsPrimary).IsRequired();
     builder.Property(e => e.DisplayOrder).IsRequired();

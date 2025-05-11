@@ -5,9 +5,12 @@ namespace Morent.Application.Features.Car.Queries;
 public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<IEnumerable<CarDto>>>
 {
   private readonly ICarRepository _carRepository;
+  private readonly IImageService _imageService;
 
-  public GetCarsByQueryHandler(ICarRepository carRepo) {
+  public GetCarsByQueryHandler(ICarRepository carRepo, IImageService imageService)
+  {
     _carRepository = carRepo;
+    _imageService = imageService;
   }
 
   public async Task<PagedResult<IEnumerable<CarDto>>> Handle(GetCarsByQuery request, CancellationToken cancellationToken)
@@ -36,10 +39,26 @@ public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<I
         .Select(c => c.ToCarDto())
         .ToList();
 
+    cars.ForEach(car => car.Images.ForEach(
+      async image => image = await SetCarImageUrl(image)));
+
     return new PagedResult<IEnumerable<CarDto>>(
       new PagedInfo(page, pageSize, (totalRecords + pageSize - 1) / pageSize, totalRecords),
       cars
     );
+  }
+
+  private async Task<CarImageDto> SetCarImageUrl(CarImageDto carImage)
+  {
+    var result = await _imageService.GetImageByIdAsync(carImage.ImageId);
+    if (!result.IsSuccess)
+    {
+      var placeholderImageResult = await _imageService.GetPlaceHolderImageAsync();
+      carImage.Url = placeholderImageResult.Value.Url;
+      return carImage;
+    }
+    carImage.Url = result.Value.Url;
+    return carImage;
   }
 
   private IQueryable<MorentCar> ApplyCarFilter(IQueryable<MorentCar> cars, CarFilter filter)
@@ -47,11 +66,11 @@ public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<I
     // Apply Filters
     if (!string.IsNullOrWhiteSpace(filter.Brand))
       cars = cars.Where(
-        c => c.CarModel.Brand.Contains(filter.Brand));
+        c => c.CarModel.Brand.ToLower().Contains(filter.Brand.ToLower()));
 
     if (!string.IsNullOrWhiteSpace(filter.Type))
       cars = cars.Where(
-        c => c.CarModel.ModelName.Contains(filter.Type));
+        c => c.CarModel.CarType.ToString().ToLower() == filter.Type.ToLower());
 
     if (filter.Capacity.HasValue)
       cars = cars.Where(
@@ -86,21 +105,15 @@ public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<I
     // Apply Sorting
     if (!string.IsNullOrWhiteSpace(filter.Sort))
     {
-      if (filter.Sort.Equals("price_asc", StringComparison.OrdinalIgnoreCase))
+      switch(filter.Sort)
       {
-        cars = cars.OrderBy(c => c.PricePerDay.Amount);
-      }
-      else if (filter.Sort.Equals("price_desc", StringComparison.OrdinalIgnoreCase))
-      {
-        cars = cars.OrderByDescending(c => c.PricePerDay.Amount);
-      }
-      else if (filter.Sort.Equals("year_desc", StringComparison.OrdinalIgnoreCase))
-      {
-        cars = cars.OrderByDescending(c => c.CarModel.Year);
-      }
-      else
-      {
-        cars = cars.OrderBy(c => c.CarModel.Brand);
+        case "price_asc": cars = cars.OrderBy(c => c.PricePerDay.Amount); break;
+        case "price_desc": cars = cars.OrderByDescending(c => c.PricePerDay.Amount); break;
+        case "year_asc": cars = cars.OrderBy(c => c.CarModel.Year); break;
+        case "year_desc": cars = cars.OrderByDescending(c => c.CarModel.Year); break;
+        case "reviews_asc": cars = cars.OrderBy(c => c.Reviews.Count); break;
+        case "reviews_desc": cars = cars.OrderByDescending(c => c.Reviews.Count); break;
+        default: cars = cars.OrderBy(c => c.CarModel.Brand); break;
       }
     }
     else

@@ -52,6 +52,8 @@ public class MorentRental : EntityBase<Guid>, IAggregateRoot
     var rental = new MorentRental(rentalId, userId, carId, rentalPeriod, pickupLocation, dropoffLocation, totalCost);
     rental.RegisterDomainEvent(new RentalCreatedEvent(rental.Id, carId, userId, rentalPeriod));
 
+    rental.CreatedAt = DateTime.UtcNow;
+
     return Result.Success(rental);
   }
 

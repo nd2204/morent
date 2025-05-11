@@ -10,12 +10,14 @@ using Morent.Infrastructure.Settings;
 using Morent.Application.Repositories;
 using Morent.Application.Features.Auth.DTOs;
 using Ardalis.Result;
+using System.Threading.Tasks;
 
 namespace Morent.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
   private readonly IUserRepository _userRepository;
+  private readonly IUserProfileService _userProfileService;
   private readonly IOAuthService _oAuthService;
   private readonly AppSettings _appSettings;
   private readonly IUnitOfWork _unitOfWork;
@@ -26,13 +28,15 @@ public class AuthService : IAuthService
     IOptions<AppSettings> appSettings,
     IOAuthService oAuthService,
     IUnitOfWork unitOfWork,
-    IHttpClientFactory httpClientFactory)
+    IHttpClientFactory httpClientFactory,
+    IUserProfileService userProfileService)
   {
     _userRepository = userRepository;
     _appSettings = appSettings.Value;
     _unitOfWork = unitOfWork;
     _httpClientFactory = httpClientFactory;
     _oAuthService = oAuthService;
+    _userProfileService = userProfileService;
   }
 
   public RefreshToken GenerateRefreshToken()
@@ -85,10 +89,12 @@ public class AuthService : IAuthService
     return BCrypt.Net.BCrypt.Verify(password, passwordHash);
   }
 
-  public AuthResponse GenerateAuthResponse(MorentUser user)
+  public async Task<AuthResponse> GenerateAuthResponse(MorentUser user)
   {
     var jwtToken = GenerateJwtToken(user);
     var refreshToken = GenerateRefreshToken();
+
+    var imageUrl = await _userProfileService.GetUserProfileImageAsync(user.Id);
 
     // Create response with both tokens
     return new AuthResponse
@@ -100,6 +106,7 @@ public class AuthService : IAuthService
       {
         UserId = user.Id,
         Name = user.Name,
+        ImageUrl = imageUrl.IsSuccess ? imageUrl.Value.Url : "",
         Email = user.Email.Value,
       }
     };
@@ -110,22 +117,22 @@ public class AuthService : IAuthService
     // Find user by email
     var user = await _userRepository.GetByUsernameOrEmail(request.LoginId);
     if (user == null)
-      return Result.Invalid(new ValidationError("Invalid username/email or password"));
+      return Result.Invalid(new ValidationError("loginId", "Invalid username/email or password"));
 
     // Validate password
     if (user.PasswordHash != null)
     {
       bool isPasswordValid = VerifyPassword(request.Password, user.PasswordHash);
       if (!isPasswordValid)
-        return Result.Invalid(new ValidationError("Invalid username/email or password"));
+        return Result.Invalid(new ValidationError("loginId", "Invalid username/email or password"));
     }
     else
     {
-      return Result.Invalid(new ValidationError("Invalid username/email or password"));
+      return Result.Invalid(new ValidationError("loginId", "Invalid username/email or password"));
     }
 
     // Generate auth response (access token + refresh token)
-    var authResponse = GenerateAuthResponse(user);
+    var authResponse = await GenerateAuthResponse(user);
 
     // Add new refresh token to user entity
     var refreshToken = new RefreshToken(authResponse.RefreshToken, DateTime.UtcNow.AddDays(7));

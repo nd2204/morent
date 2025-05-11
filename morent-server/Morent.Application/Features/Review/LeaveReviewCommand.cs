@@ -2,11 +2,9 @@ using System;
 
 namespace Morent.Application.Features.Review;
 
-public class LeaveReviewCommand : ICommand<Result<Guid>>
+public class LeaveReviewCommand : ICommand<Result<ReviewDto>>
 {
-  public Guid UserId { get; set; }
-  public Guid CarId { get; set; }
-  public Guid RentalId { get; set; }
-  public int Rating { get; set; }
-  public string Comment { get; set; } = null!;
+  public required Guid UserId { get; set; }
+  public required Guid CarId { get; set; }
+  public required LeaveReviewRequest Request { get; set; }
 }

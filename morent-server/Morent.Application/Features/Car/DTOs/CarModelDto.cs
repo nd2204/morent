@@ -4,11 +4,12 @@ namespace Morent.Application.Features.Car.DTOs;
 
 public class CarModelDto
 {
-  public string Brand { get; set; } = default!;
-  public string Model { get; set; } = default!;
-  public string FuelType { get; set; } = default!;
-  public string GearBox { get; set; } = default!;
-  public int FuelTankCapacity { get; set; }
-  public int Year { get; set; }
-  public int SeatCapacity { get; set; }
+  public required string Brand { get; set; } = default!;
+  public required string Model { get; set; } = default!;
+  public required string FuelType { get; set; } = default!;
+  public required string GearBox { get; set; } = default!;
+  public required int FuelTankCapacity { get; set; }
+  public required int Year { get; set; }
+  public required int SeatCapacity { get; set; }
+  public required string Type { get; set; } = default!;
 }

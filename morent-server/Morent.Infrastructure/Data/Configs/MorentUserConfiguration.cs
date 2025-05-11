@@ -8,23 +8,26 @@ public class MorentUserConfiguration : IEntityTypeConfiguration<MorentUser>
 {
     public void Configure(EntityTypeBuilder<MorentUser> builder)
     {
-        builder.HasKey(e => e.Id);
+        builder.HasKey(u => u.Id);
 
-        builder.Property(e => e.Name)
+        builder.HasIndex(u => u.Username)
+            .IsUnique();
+
+        builder.Property(u => u.Name)
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(e => e.PasswordHash)
+        builder.Property(u => u.PasswordHash)
             .HasMaxLength(256);
 
-        builder.Property(e => e.Role)
+        builder.Property(u => u.Role)
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(20);
 
         builder.HasOne<MorentImage>()
             .WithMany()
-            .HasForeignKey(e => e.ProfileImageId)
+            .HasForeignKey(u => u.ProfileImageId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Configure Email Value Object
