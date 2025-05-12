@@ -104,6 +104,9 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<ActionResult<IEnumerable<UserCarsReviewDto>>> GetUserReviews()
     {
+        if (!User.Identity!.IsAuthenticated)
+            return Unauthorized();
+
         var userId = GetUserGuid();
         var result = await _mediator.Send(new GetUserReviewsQuery(userId));
         return this.ToActionResult(result);
