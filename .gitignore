@@ -485,5 +485,6 @@ $RECYCLE.BIN/
 
 
 *.db
+*.db-*
 log*.txt
 

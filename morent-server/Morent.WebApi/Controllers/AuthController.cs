@@ -79,7 +79,6 @@ public class AuthController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {

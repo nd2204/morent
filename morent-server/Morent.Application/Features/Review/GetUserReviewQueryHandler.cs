@@ -1,4 +1,5 @@
 using System;
+using Morent.Application.Extensions;
 
 namespace Morent.Application.Features.Review;
 
@@ -6,13 +7,17 @@ public class GetUserReviewQueryHandler(
   IReviewRepository reviewRepository,
   IRentalRepository rentalRepository,
   IUserRepository userRepository,
-  ICarImageService carImageService
+  ICarImageService carImageService,
+  ICarRepository carRepository,
+  IImageService imageService
 ) : IQueryHandler<GetUserReviewsQuery, Result<IEnumerable<UserCarsReviewDto>>>
 {
   private readonly IReviewRepository _reviewRepository = reviewRepository;
+  private readonly ICarRepository _carRepository = carRepository;
   private readonly IRentalRepository _rentalRepository = rentalRepository;
   private readonly IUserRepository _userRepository = userRepository;
   private readonly ICarImageService _carImageService = carImageService;
+  private readonly IImageService _imageService = imageService;
 
   public async Task<Result<IEnumerable<UserCarsReviewDto>>> Handle(GetUserReviewsQuery request, CancellationToken cancellationToken)
   {
@@ -20,29 +25,50 @@ public class GetUserReviewQueryHandler(
     if (user == null)
       return Result.NotFound($"User with ID {request.UserId} not found.");
 
-    var reviews = await _reviewRepository.GetReviewsByUserIdAsync(request.UserId);
+    var rentals = await _rentalRepository.GetRentalsByUserIdAsync(request.UserId);
 
     var reviewDtos = new List<UserCarsReviewDto>();
-    foreach (var review in reviews)
+    foreach (var rental in rentals)
     {
-      var rental = await _rentalRepository.GetRentalByUserAndCarAsync(request.UserId, review.CarId);
+      var car = await _carRepository.GetCarWithRentalsAsync(rental.CarId);
+      if (car == null)
+        return Result.NotFound($"Car with ID {rental.CarId} notfound");
 
-      if (rental == null)
-        return Result.CriticalError($"Rental by user with Id {request.UserId} and car ID {review.CarId} not found!");
+      var reviews = car.Reviews;
       
-      var result = await _carImageService.GetCarImagesAsync(review.CarId);
+      var imageResult = await _carImageService.GetCarImagesAsync(rental.CarId);
 
-      var carReviews = await _reviewRepository.GetReviewsByCarIdAsync(review.CarId);
+      var review = reviews.FirstOrDefault(s => s.UserId == request.UserId);
+      bool isReviewed = review != null;
+
+      var carDto = car.ToCarDto();
+      carDto.Images.ForEach(
+        async image => image = await SetCarImageUrl(image));
 
       reviewDtos.Add(new UserCarsReviewDto
       {
-        RentalId = rental.Id,
-        CarImageUrl = result.IsSuccess ? result.Value.First().Url : "",
-        Rating = review.Rating,
-        IsReviewed = carReviews.Any(s => s.UserId == request.UserId)
+        Rental = rental.ToDto(),
+        Car = carDto,
+        CarImageUrl = imageResult.IsSuccess ? imageResult.Value.First().Url : "",
+        Rating = isReviewed ? review!.Rating : 0,
+        Comment = isReviewed ? review!.Comment : "",
+        IsReviewed = isReviewed
       });
     }
 
     return Result.Success(reviewDtos.AsEnumerable());
   }
+  private async Task<CarImageDto> SetCarImageUrl(CarImageDto carImage)
+  {
+    var result = await _imageService.GetImageByIdAsync(carImage.ImageId);
+    if (!result.IsSuccess)
+    {
+      var placeholderImageResult = await _imageService.GetPlaceHolderImageAsync();
+      carImage.Url = placeholderImageResult.Value.Url;
+      return carImage;
+    }
+    carImage.Url = result.Value.Url;
+    return carImage;
+  }
 }
+
