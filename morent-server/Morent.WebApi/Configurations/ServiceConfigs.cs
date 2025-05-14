@@ -31,19 +31,22 @@ public static class ServiceConfig
       // Use test mailing service in development
       // services.AddScoped<IEmailSender, Mime>;
 
-      var ngrok = new Process
-      {
-        StartInfo = new ProcessStartInfo
+      try {
+        var ngrok = new Process
         {
-          FileName = "ngrok",
-          Arguments = "http --url=coral-unbiased-scarcely.ngrok-free.app https://localhost:7083",
-          RedirectStandardOutput = true,
-          UseShellExecute = false,
-          CreateNoWindow = false
-        }
-      };
-
-      ngrok.Start();
+          StartInfo = new ProcessStartInfo
+          {
+            FileName = "ngrok",
+            Arguments = "http --url=coral-unbiased-scarcely.ngrok-free.app https://localhost:7083",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = false
+          }
+        };
+        ngrok.Start();
+      } catch(Exception ex) {
+        logger.LogWarning("Errors when starting ngrok: {0}", ex.Message);
+      }
     }
 
     logger.LogInformation("{Project} registered", "WebApi services");

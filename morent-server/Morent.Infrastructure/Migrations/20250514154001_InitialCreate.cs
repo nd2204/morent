@@ -53,13 +53,13 @@ namespace Morent.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     CarModelId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LicensePlate = table.Column<string>(type: "TEXT", nullable: false),
+                    PriceAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PriceCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
                     IsAvailable = table.Column<bool>(type: "INTEGER", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     CurrentLocation_Address = table.Column<string>(type: "TEXT", nullable: false),
                     CurrentLocation_City = table.Column<string>(type: "TEXT", nullable: false),
-                    CurrentLocation_Country = table.Column<string>(type: "TEXT", nullable: false),
-                    PriceAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PriceCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false)
+                    CurrentLocation_Country = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -78,14 +78,14 @@ namespace Morent.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
                     Username = table.Column<string>(type: "TEXT", nullable: false),
                     PasswordHash = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Role = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     ProfileImageId = table.Column<Guid>(type: "TEXT", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastLoginAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false)
+                    LastLoginAt = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -204,12 +204,12 @@ namespace Morent.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     RentalId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    PaymentAmount_Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PaymentAmount_Currency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
                     Method = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
                     TransactionId = table.Column<string>(type: "TEXT", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    PaymentAmount_Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PaymentAmount_Currency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false)
+                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -223,20 +223,20 @@ namespace Morent.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     CarId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PaymentId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    MorentCarId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DropoffAddress = table.Column<string>(type: "TEXT", nullable: false),
-                    DropoffCity = table.Column<string>(type: "TEXT", nullable: false),
-                    DropoffCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    RentalPeriod_Start = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RentalPeriod_End = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PickupAddress = table.Column<string>(type: "TEXT", nullable: false),
                     PickupCity = table.Column<string>(type: "TEXT", nullable: false),
                     PickupCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    RentalPeriod_End = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    RentalPeriod_Start = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DropoffAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    DropoffCity = table.Column<string>(type: "TEXT", nullable: false),
+                    DropoffCountry = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     CostAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CostCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false)
+                    CostCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    PaymentId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    MorentCarId = table.Column<Guid>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
