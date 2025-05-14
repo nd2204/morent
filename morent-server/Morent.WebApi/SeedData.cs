@@ -210,6 +210,7 @@ public static class SeedData
       logger.LogInformation("Cars seeded successfully.");
     }
 
+    await CleanupOrphanedImages(env, logger, imageRepository);
     await SeedCarImages(context, logger, env, imageService, imageRepository);
 
     if (!await context.Rentals.AnyAsync())
@@ -221,13 +222,14 @@ public static class SeedData
     {
       await SeedReviews(context, logger, userService);
     }
+
+    await SeedUserProfileImage(context, userProfileService);
   }
 
   public static async Task PopulateTestData(IServiceProvider service, ILogger logger)
   {
     MorentDbContext context = service.GetRequiredService<MorentDbContext>();
     IAuthService authService = service.GetRequiredService<IAuthService>();
-    IUserProfileService userProfileService = service.GetRequiredService<IUserProfileService>();
     IUserService userService = service.GetRequiredService<IUserService>();
 
     if (!await context.Users.AnyAsync())
@@ -246,8 +248,6 @@ public static class SeedData
     {
       await SeedReviews(context, logger, userService);
     }
-
-    await SeedUserProfileImage(context, userProfileService);
   }
 
   public static async Task<Dictionary<string, Guid>> SeedCarModels(MorentDbContext context)
@@ -446,10 +446,6 @@ public static class SeedData
       logger.LogInformation($"Error seeding car images: {ex.Message}");
       throw; // Rethrow to allow the calling code to handle it
     }
-    finally
-    {
-      await CleanupOrphanedImages(env, logger, imageRepository);
-    }
   }
 
   public static async Task SeedPlaceholderImages(IWebHostEnvironment env, IImageService imageService)
@@ -532,6 +528,7 @@ public static class SeedData
       context.Users.RemoveRange(context.Users);
       await context.SaveChangesAsync();
     }
+
 
     context.Users.AddRange(admin1, user1, user2, user3, user4, user5, user6);
     await context.SaveChangesAsync();

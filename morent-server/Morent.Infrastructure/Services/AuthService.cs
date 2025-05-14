@@ -182,7 +182,9 @@ public class AuthService : IAuthService
       Password = request.Password
     };
 
-    return await AuthenticateAsync(authRequest, cancellationToken);
+    var result = await AuthenticateAsync(authRequest, cancellationToken);
+
+    return Result.Created(result.Value);
   }
 
   public async Task<Result<MorentUser>> ValidateRefreshTokenAsync(string token, CancellationToken cancellationToken = default)

@@ -21,10 +21,10 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build Backend
-      run: dotnet build --no-restore
+      run: dotnet build
 
     - name: Run tests with coverage
-      run: dotnet test --no-build --collect:"XPlat Code Coverage"
+      run: dotnet test ./tests/Morent.UnitTests --collect:"XPlat Code Coverage"
 
     - name: Generate coverage report
       run: |
