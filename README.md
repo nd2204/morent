@@ -16,6 +16,7 @@
 
 This project follows Clean Architecture principles with a clear separation of concerns:
 
+```sh
 morent-server/
 │
 ├── Morent.Core/                       # Domain layer - core business entities, rules, and value objects
@@ -72,6 +73,7 @@ morent-server/
 │   ├── Program.cs                     # Application entry point
 │   ├── appsettings.json               # Application settings
 │   ├── GlobalUsing.cs                 # Global using statements
+```
 
 ## 🛠 Technology Stack
 
