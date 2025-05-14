@@ -10,148 +10,266 @@ using Morent.Core.MorentReviewAggregate;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data;
-public class SeedData(IServiceProvider service, MorentDbContext context)
+using Morent.Infrastructure.Services;
+
+public static class SeedData
 {
-  private readonly MorentDbContext _dbContext = context;
-  private readonly IAuthService _authService = service.GetRequiredService<IAuthService>();
-  private readonly ILogger<SeedData> _logger = service.GetRequiredService<ILogger<SeedData>>();
-  private readonly IUserProfileService _userProfileService = service.GetRequiredService<IUserProfileService>();
-  private readonly IImageStorage _imageStorage = service.GetRequiredService<IImageStorage>();
-  private readonly IImageService _imageService = service.GetRequiredService<IImageService>();
-  private readonly IWebHostEnvironment _env = service.GetRequiredService<IWebHostEnvironment>();
-  private readonly IRepository<MorentImage> _images = service.GetRequiredService<IRepository<MorentImage>>();
+  public static int NUM_CARS_TO_SEED = 50;
 
+  // =============================================================================
+  // Users
+  // =============================================================================
 
-  private MorentUser admin1, user1, user2, user3, user4, user5, user6;
+  public static MorentUser admin1 = MorentUser.CreateAdmin(
+    "Morent LLC",
+    "admin",
+    Email.Create("admin@test.com").Value,
+    AuthService._HashPassword("20102001")
+  );
 
-  private readonly Dictionary<string, MorentCarModel> _carModels = new Dictionary<string, MorentCarModel>
+  public static MorentUser user1 = MorentUser.CreateLocalUser(
+    name: "Alex Thomson",
+      username: "alexts",
+      email: Email.Create("alexts@morent.com"),
+      passwordHash: AuthService._HashPassword("alextsmorentcom")
+    );
+
+  public static MorentUser user2 = MorentUser.CreateLocalUser(
+    name: "Sarah Chen",
+    username: "sarahchen",
+    email: Email.Create("sarahchen@morent.com"),
+    passwordHash: AuthService._HashPassword("sarahchenmorentco")
+  );
+
+  public static MorentUser user3 = MorentUser.CreateLocalUser(
+    name: "Mike Johnson",
+      username: "mikejohnson",
+      email: Email.Create("mikejohnson@morent.com"),
+      passwordHash: AuthService._HashPassword("mikejohnsonmorentco")
+    );
+
+  public static MorentUser user4 = MorentUser.CreateLocalUser(
+    name: "David Wilson",
+    username: "davidwilson",
+    email: Email.Create("davidwilson@morent.com"),
+    passwordHash: AuthService._HashPassword("davidwilsonmorentco")
+  );
+
+  public static MorentUser user5 = MorentUser.CreateLocalUser(
+    name: "Lisa Anderson",
+    username: "lisaanderson",
+    email: Email.Create("lisaanderson@morent.com"),
+    passwordHash: AuthService._HashPassword("lisaandersonmorentco")
+  );
+
+  public static MorentUser user6 = MorentUser.CreateLocalUser(
+    name: "Emily Parker",
+    username: "emilyparker",
+    email: Email.Create("emilyparker@morent.com"),
+    passwordHash: AuthService._HashPassword("lisaandersonmorentco")
+  );
+
+  // =============================================================================
+  // Car Models
+  // =============================================================================
+
+  public static MorentCarModel KoenigseggCCGT = new MorentCarModel(
+      Guid.NewGuid(), "Koenigsegg", "CCGT", 2007,
+      FuelType.Gasoline, GearBoxType.Manual, CarType.Sport, 100, 2);
+
+  public static MorentCarModel NissanGTR = new MorentCarModel(
+      Guid.NewGuid(), "Nissan", "GT-R", 2023,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Sport, 70, 4);
+
+  public static MorentCarModel RollsRoyceDawn = new MorentCarModel(
+      Guid.NewGuid(), "Rolls-Royce", "Dawn", 2017,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Luxury, 70, 4);
+
+  public static MorentCarModel MercedesSClass = new MorentCarModel(
+      Guid.NewGuid(), "Mercedes-Benz", "S-Class", 2022,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Luxury, 65, 5);
+
+  public static MorentCarModel TeslaModel3 = new MorentCarModel(
+      Guid.NewGuid(), "Tesla", "Model 3", 2023,
+      FuelType.Electric, GearBoxType.Automatic, CarType.Sedan, 55, 5);
+
+  public static MorentCarModel TeslaModelX = new MorentCarModel(
+      Guid.NewGuid(), "Tesla", "Model X", 2023,
+      FuelType.Electric, GearBoxType.Automatic, CarType.SUV, 90, 7);
+
+  public static MorentCarModel ToyotaRush = new MorentCarModel(
+      Guid.NewGuid(), "Toyota", "Rush", 2022,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 45, 7);
+
+  public static MorentCarModel HondaCRV = new MorentCarModel(
+      Guid.NewGuid(), "Honda", "CR-V", 2022,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 50, 5);
+
+  public static MorentCarModel DaihatsuTerios = new MorentCarModel(
+      Guid.NewGuid(), "Daihatsu", "Terios", 2021,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 40, 7);
+
+  public static MorentCarModel MGZSExclusive = new MorentCarModel(
+      Guid.NewGuid(), "MG", "ZS Exclusive", 2023,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 38, 5);
+
+  public static MorentCarModel ToyotaCamry = new MorentCarModel(
+      Guid.NewGuid(), "Toyota", "Camry", 2022,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 40, 5);
+
+  public static MorentCarModel HondaAccord = new MorentCarModel(
+      Guid.NewGuid(), "Honda", "Accord", 2022,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 42, 5);
+
+  public static MorentCarModel BMW3Series = new MorentCarModel(
+      Guid.NewGuid(), "BMW", "3 Series", 2023,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 50, 5);
+
+  public static MorentCarModel FordRanger = new MorentCarModel(
+      Guid.NewGuid(), "Ford", "Ranger", 2023,
+      FuelType.Diesel, GearBoxType.Automatic, CarType.Pickup, 55, 5);
+
+  public static MorentCarModel ToyotaHilux = new MorentCarModel(
+      Guid.NewGuid(), "Toyota", "Hilux", 2022,
+      FuelType.Diesel, GearBoxType.Automatic, CarType.Pickup, 50, 5);
+
+  public static MorentCarModel Hyundaii10 = new MorentCarModel(
+      Guid.NewGuid(), "Hyundai", "Grand i10", 2023,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Hatchback, 25, 5);
+
+  public static MorentCarModel KiaMorning = new MorentCarModel(
+      Guid.NewGuid(), "Kia", "Morning", 2023,
+      FuelType.Gasoline, GearBoxType.Automatic, CarType.Hatchback, 24, 5);
+
+  // =============================================================================
+  // Actual Car Instance
+  // =============================================================================
+
+  public static MorentCar KiaMorningCar = CreateRandomCarWithModel(KiaMorning);
+  public static MorentCar KoenigseggCCGTCar = CreateRandomCarWithModel(KoenigseggCCGT);
+  public static MorentCar NissanGTRCar = CreateRandomCarWithModel(NissanGTR);
+  public static MorentCar RollsRoyceDawnCar = CreateRandomCarWithModel(RollsRoyceDawn);
+  public static MorentCar MercedesSClassCar = CreateRandomCarWithModel(MercedesSClass);
+  public static MorentCar TeslaModel3Car = CreateRandomCarWithModel(TeslaModel3);
+  public static MorentCar TeslaModelXCar = CreateRandomCarWithModel(TeslaModelX);
+  public static MorentCar ToyotaRushCar = CreateRandomCarWithModel(ToyotaRush);
+  public static MorentCar HondaCRVCar = CreateRandomCarWithModel(HondaCRV);
+  public static MorentCar DaihatsuTeriosCar = CreateRandomCarWithModel(DaihatsuTerios);
+  public static MorentCar MGZSExclusiveCar = CreateRandomCarWithModel(MGZSExclusive);
+  public static MorentCar ToyotaCamryCar = CreateRandomCarWithModel(ToyotaCamry);
+  public static MorentCar HondaAccordCar = CreateRandomCarWithModel(HondaAccord);
+  public static MorentCar BMW3SeriesCar = CreateRandomCarWithModel(BMW3Series);
+  public static MorentCar FordRangerCar = CreateRandomCarWithModel(FordRanger);
+  public static MorentCar ToyotaHiluxCar = CreateRandomCarWithModel(ToyotaHilux);
+  public static MorentCar Hyundaii10Car = CreateRandomCarWithModel(Hyundaii10);
+
+  // =============================================================================
+  // Car Reviews
+  // =============================================================================
+
+  public static Dictionary<string, MorentCarModel> CarModels = new Dictionary<string, MorentCarModel>
   {
-    ["KoenigseggCCGT"] = new MorentCarModel(
-        Guid.NewGuid(), "Koenigsegg", "CCGT", 2007,
-        FuelType.Gasoline, GearBoxType.Manual, CarType.Sport, 100, 2),
-
-    ["NissanGTR"] = new MorentCarModel(
-        Guid.NewGuid(), "Nissan", "GT-R", 2023,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Sport, 70, 4),
-
-    ["RollsRoyceDawn"] = new MorentCarModel(
-        Guid.NewGuid(), "Rolls-Royce", "Dawn", 2017,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Luxury, 70, 4),
-
-    ["MercedesSClass"] = new MorentCarModel(
-        Guid.NewGuid(), "Mercedes-Benz", "S-Class", 2022,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Luxury, 65, 5),
-
-    ["TeslaModel3"] = new MorentCarModel(
-        Guid.NewGuid(), "Tesla", "Model 3", 2023,
-        FuelType.Electric, GearBoxType.Automatic, CarType.Sedan, 55, 5),
-
-    ["TeslaModelX"] = new MorentCarModel(
-        Guid.NewGuid(), "Tesla", "Model X", 2023,
-        FuelType.Electric, GearBoxType.Automatic, CarType.SUV, 90, 7),
-
-    ["ToyotaRush"] = new MorentCarModel(
-        Guid.NewGuid(), "Toyota", "Rush", 2022,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 45, 7),
-
-    ["HondaCRV"] = new MorentCarModel(
-        Guid.NewGuid(), "Honda", "CR-V", 2022,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 50, 5),
-
-    ["DaihatsuTerios"] = new MorentCarModel(
-        Guid.NewGuid(), "Daihatsu", "Terios", 2021,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 40, 7),
-
-    ["MGZSExclusive"] = new MorentCarModel(
-        Guid.NewGuid(), "MG", "ZS Exclusive", 2023,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.SUV, 38, 5),
-
-    ["ToyotaCamry"] = new MorentCarModel(
-        Guid.NewGuid(), "Toyota", "Camry", 2022,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 40, 5),
-
-    ["HondaAccord"] = new MorentCarModel(
-        Guid.NewGuid(), "Honda", "Accord", 2022,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 42, 5),
-
-    ["BMW3Series"] = new MorentCarModel(
-        Guid.NewGuid(), "BMW", "3 Series", 2023,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Sedan, 50, 5),
-
-    ["FordRanger"] = new MorentCarModel(
-        Guid.NewGuid(), "Ford", "Ranger", 2023,
-        FuelType.Diesel, GearBoxType.Automatic, CarType.Pickup, 55, 5),
-
-    ["ToyotaHilux"] = new MorentCarModel(
-        Guid.NewGuid(), "Toyota", "Hilux", 2022,
-        FuelType.Diesel, GearBoxType.Automatic, CarType.Pickup, 50, 5),
-
-    ["Hyundaii10"] = new MorentCarModel(
-        Guid.NewGuid(), "Hyundai", "Grand i10", 2023,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Hatchback, 25, 5),
-
-    ["KiaMorning"] = new MorentCarModel(
-        Guid.NewGuid(), "Kia", "Morning", 2023,
-        FuelType.Gasoline, GearBoxType.Automatic, CarType.Hatchback, 24, 5),
+    ["KoenigseggCCGT"] = KoenigseggCCGT,
+    ["NissanGTR"] = NissanGTR,
+    ["RollsRoyceDawn"] = RollsRoyceDawn,
+    ["MercedesSClass"] = MercedesSClass,
+    ["TeslaModel3"] = TeslaModel3,
+    ["TeslaModelX"] = TeslaModelX,
+    ["ToyotaRush"] = ToyotaRush,
+    ["HondaCRV"] = HondaCRV,
+    ["DaihatsuTerios"] = DaihatsuTerios,
+    ["MGZSExclusive"] = MGZSExclusive,
+    ["ToyotaCamry"] = ToyotaCamry,
+    ["HondaAccord"] = HondaAccord,
+    ["BMW3Series"] = BMW3Series,
+    ["FordRanger"] = FordRanger,
+    ["ToyotaHilux"] = ToyotaHilux,
+    ["Hyundaii10"] = Hyundaii10,
+    ["KiaMorning"] = KiaMorning
   };
 
-  private Dictionary<string, Guid> _savedModelIds = new Dictionary<string, Guid>();
-
-  public async Task InitializeAsync()
+  public static async Task InitializeAsync(IServiceProvider service, ILogger logger)
   {
-    // First seed users
-    if (!await _dbContext.Users.AnyAsync())
+    MorentDbContext context = service.GetRequiredService<MorentDbContext>();
+    IAuthService authService = service.GetRequiredService<IAuthService>();
+    IUserProfileService userProfileService = service.GetRequiredService<IUserProfileService>();
+    IUserService userService = service.GetRequiredService<IUserService>();
+    IImageService imageService = service.GetRequiredService<IImageService>();
+    IWebHostEnvironment env = service.GetRequiredService<IWebHostEnvironment>();
+    IRepository<MorentImage> imageRepository = service.GetRequiredService<IRepository<MorentImage>>();
+
+    if (!await context.Users.AnyAsync())
     {
-      await SeedUser();
-      _logger.LogInformation("Users seeded successfully.");
+      await SeedUser(context, authService);
+      logger.LogInformation("Users seeded successfully.");
     }
 
-    // Cars depends on models to be created first
-    if (!await _dbContext.Cars.AnyAsync())
+    if (!await context.Cars.AnyAsync())
     {
-      // Seed car models and store their database IDs
-      await SeedCarModels();
-      _logger.LogInformation("Car models seeded successfully.");
-
-      // Finally seed cars using the saved model IDs
-      await SeedCars();
-      _logger.LogInformation("Cars seeded successfully.");
+      await SeedCars(context);
+      logger.LogInformation("Cars seeded successfully.");
     }
 
-    await SeedCarImages();
+    await SeedCarImages(context, logger, env, imageService, imageRepository);
 
-    if (!await _dbContext.Rentals.AnyAsync())
+    if (!await context.Rentals.AnyAsync())
     {
-      await SeedRentals();
+      await SeedRentals(context, logger, userService);
     }
 
-    if (!await _dbContext.Reviews.AnyAsync())
+    if (!await context.Reviews.AnyAsync())
     {
-      await SeedReviews();
+      await SeedReviews(context, logger, userService);
     }
-
-
-    await SeedUserProfileImage();
   }
 
-  private async Task SeedCarModels()
+  public static async Task PopulateTestData(IServiceProvider service, ILogger logger)
   {
-    // Clear existing car models if needed
-    if (await _dbContext.CarModels.AnyAsync())
+    MorentDbContext context = service.GetRequiredService<MorentDbContext>();
+    IAuthService authService = service.GetRequiredService<IAuthService>();
+    IUserProfileService userProfileService = service.GetRequiredService<IUserProfileService>();
+    IUserService userService = service.GetRequiredService<IUserService>();
+
+    if (!await context.Users.AnyAsync())
     {
-      _dbContext.CarModels.RemoveRange(_dbContext.CarModels);
-      await _dbContext.SaveChangesAsync();
+      await SeedUser(context, authService);
+      logger.LogInformation("Users seeded successfully.");
+    }
+
+    if (!await context.Cars.AnyAsync())
+    {
+      await SeedCars(context);
+      logger.LogInformation("Cars seeded successfully.");
+    }
+
+    if (!await context.Reviews.AnyAsync())
+    {
+      await SeedReviews(context, logger, userService);
+    }
+
+    await SeedUserProfileImage(context, userProfileService);
+  }
+
+  public static async Task<Dictionary<string, Guid>> SeedCarModels(MorentDbContext context)
+  {
+    Dictionary<string, Guid> SavedModelIds = new Dictionary<string, Guid>();
+    // Clear existing car models if needed
+    if (await context.CarModels.AnyAsync())
+    {
+      context.CarModels.RemoveRange(context.CarModels);
+      await context.SaveChangesAsync();
     }
 
     // Add car models and save to get their database-generated IDs
-    _dbContext.CarModels.AddRange(_carModels.Values);
-    await _dbContext.SaveChangesAsync();
+    context.CarModels.AddRange(CarModels.Values);
+
+    await context.SaveChangesAsync();
 
     // Retrieve the saved models with their actual database IDs
-    var savedModels = await _dbContext.CarModels.ToListAsync();
+    var savedModels = await context.CarModels.ToListAsync();
 
     // Map the key names to the actual saved IDs for later use in SeedCars
-    foreach (var keyValuePair in _carModels)
+    foreach (var keyValuePair in CarModels)
     {
       var modelName = keyValuePair.Key;
       var modelInDb = savedModels.FirstOrDefault(m =>
@@ -161,114 +279,105 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
 
       if (modelInDb != null)
       {
-        _savedModelIds[modelName] = modelInDb.Id;
+        SavedModelIds[modelName] = modelInDb.Id;
       }
     }
+    return SavedModelIds;
   }
 
-  private async Task SeedCars()
+  public static async Task SeedCars(MorentDbContext context)
   {
     // Clear existing cars
-    if (await _dbContext.Cars.AnyAsync())
+    if (await context.Cars.AnyAsync())
     {
-      _dbContext.Cars.RemoveRange(_dbContext.Cars);
-      await _dbContext.SaveChangesAsync();
+      context.Cars.RemoveRange(context.Cars);
+      await context.SaveChangesAsync();
     }
+
+    Dictionary<string, Guid> SavedModelIds = await SeedCarModels(context);
 
     // Create a list to hold all cars
     var carsList = new List<MorentCar>();
     var random = new Random();
 
-    // Create 50 cars
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < NUM_CARS_TO_SEED; i++)
     {
-      // Select a random car model from the dictionary
-      var randomModelKey = _savedModelIds.Keys.ElementAt(random.Next(_savedModelIds.Count));
-      var modelId = _savedModelIds[randomModelKey];
-      var modelInfo = _carModels[randomModelKey]; // For reference to car properties
-
-      // Generate a random license plate
-      string licensePlate = $"{random.Next(100, 999)}-{GetRandomLetters(3)}-{random.Next(10, 99)}";
-
-      // Generate a random price per day based on car type
-      decimal pricePerDay = modelInfo.CarType switch
-      {
-        CarType.Luxury => random.Next(200, 501), // $200-$500
-        CarType.Sport => random.Next(150, 401),  // $150-$400
-        CarType.SUV => random.Next(80, 201),     // $80-$200
-        CarType.Sedan => random.Next(60, 151),   // $60-$150
-        CarType.Pickup => random.Next(90, 181),  // $90-$180
-        CarType.Hatchback => random.Next(40, 101), // $40-$100
-        _ => random.Next(50, 151)                // $50-$150 default
-      };
-
-      // Generate a random location
-      var location = Location.Create(
-        address: $"{random.Next(1, 999)} {Faker.Address.StreetName()}",
-        city: Faker.Address.City(),
-        country: Faker.Address.Country()
-      ).Value;
-
-      // Generate a description based on the car model
-      string description = $"Experience the {modelInfo.Year} {modelInfo.Brand} {modelInfo.ModelName}. " +
-                          $"This {modelInfo.CarType.ToString().ToLower()} car features a {modelInfo.Gearbox.ToString().ToLower()} transmission " +
-                          $"and runs on {modelInfo.FuelType.ToString().ToLower()} fuel. " +
-                          $"It comfortably seats {modelInfo.SeatCapacity} passengers and has a capacity of {modelInfo.SeatCapacity * 15}L for luggage. " +
-                          GetRandomDescription();
-
-      var pricePerDayResult = Money.Create(pricePerDay);
-
-      // Create the MorentCar instance and add it to the list
-      var car = new MorentCar(
-        modelId: modelId,
-        licensePlate: licensePlate,
-        pricePerDay: pricePerDayResult.Value,
-        currentLocation: location,
-        description: description
-      );
-
-      carsList.Add(car);
+      var randomModelKey = SavedModelIds.Keys.ElementAt(random.Next(SavedModelIds.Count));
+      var modelInfo = CarModels[randomModelKey]; // For reference to car properties
+      carsList.Add(CreateRandomCarWithModel(modelInfo));
     }
 
     // Add all cars to the database
-    _dbContext.Cars.AddRange(carsList);
-    await _dbContext.SaveChangesAsync();
+    context.Cars.AddRange(carsList);
+    await context.SaveChangesAsync();
+  }
+
+  public static async Task SeedTestCars(MorentDbContext context)
+  {
+    // Clear existing cars
+    if (await context.Cars.AnyAsync())
+    {
+      context.Cars.RemoveRange(context.Cars);
+      await context.SaveChangesAsync();
+    }
+
+    // Add all cars to the database
+    context.Cars.AddRange(
+      KiaMorningCar,
+      KoenigseggCCGTCar,
+      NissanGTRCar,
+      RollsRoyceDawnCar,
+      MercedesSClassCar,
+      TeslaModel3Car,
+      TeslaModelXCar,
+      ToyotaRushCar,
+      HondaCRVCar,
+      DaihatsuTeriosCar,
+      MGZSExclusiveCar,
+      ToyotaCamryCar,
+      HondaAccordCar,
+      BMW3SeriesCar,
+      FordRangerCar,
+      ToyotaHiluxCar,
+      Hyundaii10Car
+    );
+    await context.SaveChangesAsync();
   }
 
   // Add this method to your existing SeedData class
-  private async Task SeedCarImages()
+  public static async Task SeedCarImages(MorentDbContext context, ILogger logger, IWebHostEnvironment env, IImageService imageService, IRepository<MorentImage> imageRepository)
   {
     try
     {
       // Get all cars IDs only to minimize tracking
-      var cars = await _dbContext.Cars
+      var cars = await context.Cars
           .Where(c => !c.Images.Any()) // Only cars without images
           .ToListAsync();
 
 
       if (!cars.Any())
       {
-        _logger.LogInformation("All cars already have images - skipping image seeding.");
+        logger.LogInformation("All cars already have images - skipping image seeding.");
         return;
       }
 
-      _logger.LogInformation($"Found {cars.Count} cars without images.");
+      logger.LogInformation($"Found {cars.Count} cars without images.");
 
       // Get image IDs only
-      var imageIds = await _dbContext.Images
+      var imageIds = await context.Images
           .Select(i => i.Id)
           .ToListAsync();
 
       if (!imageIds.Any())
       {
         // Upload new images if none exist
-        var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "uploads");
+        var assetPath = Path.Combine(env.WebRootPath, "..", "SeedData", "uploads");
         string[] filePaths = Directory.GetFiles(assetPath);
 
         foreach (var filePath in filePaths)
         {
           using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-          var response = await _imageService.UploadImageAsync(new ImageUploadRequest
+          var response = await imageService.UploadImageAsync(new ImageUploadRequest
           {
             ImageData = stream,
             FileName = Path.GetFileName(filePath),
@@ -283,12 +392,12 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
 
       if (!imageIds.Any())
       {
-        _logger.LogInformation("No images available for seeding.");
+        logger.LogInformation("No images available for seeding.");
         return;
       }
 
-      if (!(await _imageService.GetPlaceHolderImageAsync()).IsSuccess)
-        await SeedPlaceholderImages();
+      if (!(await imageService.GetPlaceHolderImageAsync()).IsSuccess)
+        await SeedPlaceholderImages(env, imageService);
 
       // Process cars one by one with clear context between operations
       var random = new Random();
@@ -300,58 +409,58 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
         try
         {
           // Clear the change tracker before each operation
-          _dbContext.ChangeTracker.Clear();
+          context.ChangeTracker.Clear();
 
           var fileName = $"{car.CarModel.Brand.ToLower()}-{car.CarModel.ModelName.ToLower()}-1.png";
-          var image = await _images.FirstOrDefaultAsync(new ImageByFileNameSpec(fileName));
+          var image = await imageRepository.FirstOrDefaultAsync(new ImageByFileNameSpec(fileName));
           if (image != null)
           {
-            _logger.LogInformation($"Images with name {fileName} found: {image.Path}");
-            var filePath = Path.Combine(_env.WebRootPath, "uploads", image.Path);
+            logger.LogInformation($"Images with name {fileName} found: {image.Path}");
+            var filePath = Path.Combine(env.WebRootPath, "uploads", image.Path);
             if (File.Exists(filePath))
             {
-              await AssignCarImageDirectly(car.Id, image.Id);
+              await AssignCarImageDirectly(context, car.Id, image.Id);
               successCount++;
             }
           }
           else
           {
-            _logger.LogInformation($"No images with name {fileName} found. Assigning random");
+            logger.LogInformation($"No images with name {fileName} found. Assigning random");
             int index = random.Next(imageIds.Count);
             var imageId = imageIds[index];
-            await AssignCarImageDirectly(car.Id, imageId);
+            await AssignCarImageDirectly(context, car.Id, imageId);
             successCount++;
           }
         }
         catch (Exception ex)
         {
           failureCount++;
-          _logger.LogInformation($"Failed to assign image to car ID: {car.Id}. Error: {ex.Message}");
+          logger.LogInformation($"Failed to assign image to car ID: {car.Id}. Error: {ex.Message}");
         }
       }
 
-      _logger.LogInformation($"Car image seeding completed. Success: {successCount}, Failures: {failureCount}");
+      logger.LogInformation($"Car image seeding completed. Success: {successCount}, Failures: {failureCount}");
     }
     catch (Exception ex)
     {
-      _logger.LogInformation($"Error seeding car images: {ex.Message}");
+      logger.LogInformation($"Error seeding car images: {ex.Message}");
       throw; // Rethrow to allow the calling code to handle it
     }
     finally
     {
-      await CleanupOrphanedImages();
+      await CleanupOrphanedImages(env, logger, imageRepository);
     }
   }
 
-  private async Task SeedPlaceholderImages()
+  public static async Task SeedPlaceholderImages(IWebHostEnvironment env, IImageService imageService)
   {
-    var assetPath = Path.Combine(_env.WebRootPath, "..", "SeedData", "placeholder");
+    var assetPath = Path.Combine(env.WebRootPath, "..", "SeedData", "placeholder");
     string[] filePaths = Directory.GetFiles(assetPath);
 
     foreach (var filePath in filePaths)
     {
       using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-      var response = await _imageService.UploadImageAsync(new ImageUploadRequest
+      var response = await imageService.UploadImageAsync(new ImageUploadRequest
       {
         ImageData = stream,
         FileName = Path.GetFileName(filePath),
@@ -361,29 +470,29 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
   }
 
   // New method to directly insert car image records
-  private async Task AssignCarImageDirectly(Guid carId, Guid imageId)
+  public static async Task AssignCarImageDirectly(MorentDbContext context, Guid carId, Guid imageId)
   {
     // Check if the car exists
-    bool carExists = await _dbContext.Cars.AnyAsync(c => c.Id == carId);
+    bool carExists = await context.Cars.AnyAsync(c => c.Id == carId);
     if (!carExists)
     {
       throw new ApplicationException($"Car with ID {carId} not found");
     }
 
     // Check if the image exists
-    bool imageExists = await _dbContext.Images.AnyAsync(i => i.Id == imageId);
+    bool imageExists = await context.Images.AnyAsync(i => i.Id == imageId);
     if (!imageExists)
     {
       throw new ApplicationException($"Image with ID {imageId} not found");
     }
 
     // Check if this car already has a primary image
-    bool hasPrimaryImage = await _dbContext.CarImages
+    bool hasPrimaryImage = await context.CarImages
         .AnyAsync(ci => ci.CarId == carId && ci.IsPrimary);
 
     // Get the next display order
     int nextDisplayOrder = 1;
-    var maxOrder = await _dbContext.CarImages
+    var maxOrder = await context.CarImages
         .Where(ci => ci.CarId == carId)
         .Select(ci => (int?)ci.DisplayOrder)
         .MaxAsync() ?? 0;
@@ -401,11 +510,11 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
     }
 
     // Add the new car image
-    _dbContext.CarImages.Add(carImage);
-    await _dbContext.SaveChangesAsync();
+    context.CarImages.Add(carImage);
+    await context.SaveChangesAsync();
   }
 
-  private static string GetContentTypeFromExtension(string extension)
+  public static string GetContentTypeFromExtension(string extension)
   {
     return extension.ToLower() switch
     {
@@ -415,80 +524,31 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
     };
   }
 
-  private async Task SeedUser()
+  public static async Task SeedUser(MorentDbContext context, IAuthService authService)
   {
     // Clear existing users if needed
-    if (await _dbContext.Users.AnyAsync())
+    if (await context.Users.AnyAsync())
     {
-      _dbContext.Users.RemoveRange(_dbContext.Users);
-      await _dbContext.SaveChangesAsync();
+      context.Users.RemoveRange(context.Users);
+      await context.SaveChangesAsync();
     }
 
-    admin1 = MorentUser.CreateAdmin(
-      "Morent LLC",
-      "admin",
-      Email.Create("admin@test.com").Value,
-      _authService.HashPassword("20102001")
-    );
-
-    user1 = MorentUser.CreateLocalUser(
-      name: "Alex Thomson",
-      username: "alexts",
-      email: Email.Create("alexts@morent.com"),
-      passwordHash: _authService.HashPassword("alextsmorentcom")
-    );
-
-    user2 = MorentUser.CreateLocalUser(
-      name: "Sarah Chen",
-      username: "sarahchen",
-      email: Email.Create("sarahchen@morent.com"),
-      passwordHash: _authService.HashPassword("sarahchenmorentco")
-    );
-
-    user3 = MorentUser.CreateLocalUser(
-      name: "Mike Johnson",
-      username: "mikejohnson",
-      email: Email.Create("mikejohnson@morent.com"),
-      passwordHash: _authService.HashPassword("mikejohnsonmorentco")
-    );
-
-    user4 = MorentUser.CreateLocalUser(
-      name: "David Wilson",
-      username: "davidwilson",
-      email: Email.Create("davidwilson@morent.com"),
-      passwordHash: _authService.HashPassword("davidwilsonmorentco")
-    );
-
-    user5 = MorentUser.CreateLocalUser(
-      name: "Lisa Anderson",
-      username: "lisaanderson",
-      email: Email.Create("lisaanderson@morent.com"),
-      passwordHash: _authService.HashPassword("lisaandersonmorentco")
-    );
-
-    user6 = MorentUser.CreateLocalUser(
-      name: "Emily Parker",
-      username: "emilyparker",
-      email: Email.Create("emilyparker@morent.com"),
-      passwordHash: _authService.HashPassword("lisaandersonmorentco")
-    );
-
-    _dbContext.Users.AddRange(admin1, user1, user2, user3, user4, user5, user6);
-    await _dbContext.SaveChangesAsync();
+    context.Users.AddRange(admin1, user1, user2, user3, user4, user5, user6);
+    await context.SaveChangesAsync();
   }
 
-  private async Task SeedUserProfileImage()
+  public static async Task SeedUserProfileImage(MorentDbContext context, IUserProfileService userProfileService)
   {
-    var userWithoutImages = await _dbContext.Users.Where(u => !u.ProfileImageId.HasValue).ToListAsync();
+    var userWithoutImages = await context.Users.Where(u => !u.ProfileImageId.HasValue).ToListAsync();
     foreach (var user in userWithoutImages)
     {
       // only seed user with morent email
       if (user.Email.ToString().EndsWith("@morent.com"))
-      await _userProfileService.UpdateUserProfileImageAsync(user.Id, $"https://i.pravatar.cc/150?u={user.Name.Split(" ")[0].ToLower()}");
+        await userProfileService.UpdateUserProfileImageAsync(user.Id, $"https://i.pravatar.cc/150?u={user.Name.Split(" ")[0].ToLower()}");
     }
   }
 
-  private string GetRandomLetters(int count)
+  public static string GetRandomLetters(int count)
   {
     var random = new Random();
     const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -496,80 +556,36 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
       .Select(s => s[random.Next(s.Length)]).ToArray());
   }
 
-  private async Task SeedReviews()
+  public static async Task SeedReviews(MorentDbContext context, ILogger logger, IUserService userService)
   {
     // Skip if reviews already exist
-    if (await _dbContext.Reviews.AnyAsync())
+    if (await context.Reviews.AnyAsync())
     {
-      _logger.LogInformation("Reviews already exist - skipping review seeding.");
+      logger.LogInformation("Reviews already exist - skipping review seeding.");
       return;
     }
 
-    _logger.LogInformation("Starting review seeding...");
+    logger.LogInformation("Starting review seeding...");
 
-    var userService = service.GetRequiredService<IUserService>();
     var random = new Random();
 
     // Get all completed rentals that don't have reviews yet
-    var completedRentals = await _dbContext.Rentals
+    var completedRentals = await context.Rentals
         .Where(r => r.Status == MorentRentalStatus.Completed)
         .ToListAsync();
 
     if (!completedRentals.Any())
     {
-      _logger.LogInformation("No completed rentals available for review seeding.");
+      logger.LogInformation("No completed rentals available for review seeding.");
       return;
     }
 
-    _logger.LogInformation($"Found {completedRentals.Count} completed rentals for review seeding.");
+    logger.LogInformation($"Found {completedRentals.Count} completed rentals for review seeding.");
 
     // About 70% of completed rentals will have reviews
     int reviewCount = (int)(completedRentals.Count * 0.7);
     int successCount = 0;
     int failureCount = 0;
-
-    // Common review phrases
-    var positiveComments = new[]
-    {
-        "Great car! Very clean and ran perfectly.",
-        "Excellent condition and very comfortable for our trip.",
-        "The car was amazing! Would definitely rent again.",
-        "Perfect vehicle for our vacation. Very spacious and fuel-efficient.",
-        "The car was delivered on time and in pristine condition.",
-        "Smooth ride and excellent handling. Very satisfied!",
-        "The car exceeded my expectations. Great experience overall.",
-        "Very reliable vehicle with good gas mileage.",
-        "Clean, well-maintained car. No issues whatsoever.",
-        "Luxury experience at a reasonable price. Highly recommended!"
-    };
-
-    var mixedComments = new[]
-    {
-        "Good car overall, though it had a few minor issues.",
-        "Decent vehicle for the price. Nothing extraordinary but got the job done.",
-        "Car was clean but not as fuel-efficient as expected.",
-        "Good experience overall, but pickup process was a bit slow.",
-        "The car served its purpose well, but the AC wasn't working properly.",
-        "Good value, but there were some minor mechanical issues.",
-        "Car was okay, but had some scratches that weren't listed.",
-        "Decent experience. The car was a bit older than expected.",
-        "Generally satisfied, though the interior showed signs of wear.",
-        "Car worked fine but wasn't as clean as I expected."
-    };
-
-    var negativeComments = new[]
-    {
-        "Car had several issues that weren't disclosed beforehand.",
-        "Not satisfied with the cleanliness of the vehicle.",
-        "Several mechanical problems during our trip. Not recommended.",
-        "The car was much older than advertised.",
-        "Poor condition and unreliable. Had to call roadside assistance.",
-        "Disappointing experience. The car broke down during our trip.",
-        "Vehicle was not properly maintained. Had safety concerns.",
-        "Car was delivered late and dirty. Very disappointing.",
-        "Terrible fuel economy and uncomfortable seats.",
-        "Many undisclosed issues with the car. Would not rent again."
-    };
 
     // Shuffle completed rentals to randomize which ones get reviews
     var shuffledRentals = completedRentals.OrderBy(x => random.Next()).Take(reviewCount).ToList();
@@ -578,57 +594,14 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
     {
       try
       {
-        // Generate random rating (1-5)
-        // Weighted distribution: 5★: 40%, 4★: 30%, 3★: 15%, 2★: 10%, 1★: 5%
-        int rating;
-        double ratingRoll = random.NextDouble();
-        if (ratingRoll < 0.05) rating = 1;
-        else if (ratingRoll < 0.15) rating = 2;
-        else if (ratingRoll < 0.30) rating = 3;
-        else if (ratingRoll < 0.60) rating = 4;
-        else rating = 5;
-
-        // Select appropriate comment based on rating
-        string comment;
-        if (rating >= 4)
-        {
-          comment = positiveComments[random.Next(positiveComments.Length)];
-        }
-        else if (rating >= 3)
-        {
-          comment = mixedComments[random.Next(mixedComments.Length)];
-        }
-        else
-        {
-          comment = negativeComments[random.Next(negativeComments.Length)];
-        }
-
-        // Add some custom details to make reviews more unique
-        if (random.NextDouble() > 0.7)
-        {
-          var additionalDetails = new[]
-          {
-                    " The pickup and dropoff process was seamless.",
-                    " Would definitely recommend this car.",
-                    " Perfect for a family trip.",
-                    " Great for city driving.",
-                    " Ideal for long road trips.",
-                    " The owner was very helpful and responsive.",
-                    " The car was very fuel efficient.",
-                    " Loved the entertainment system.",
-                    " The GPS was very helpful during our trip.",
-                    " All the features worked flawlessly."
-                };
-
-          comment += additionalDetails[random.Next(additionalDetails.Length)];
-        }
+        var review = CreateRandomReview(rental.UserId, rental.CarId);
 
         // Create review
         var reviewResult = await userService.LeaveReviewAsync(
             rental.UserId,
             rental.Id,
-            rating,
-            comment,
+            review.Rating,
+            review.Comment,
             CancellationToken.None
         );
 
@@ -638,50 +611,49 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
         }
         else
         {
-          _logger.LogError($"Failed to create review: {string.Join(", ", reviewResult.Errors)}");
+          logger.LogError($"Failed to create review: {string.Join(", ", reviewResult.Errors)}");
           failureCount++;
         }
       }
       catch (Exception ex)
       {
-        _logger.LogError($"Error creating review: {ex.Message}");
+        logger.LogError($"Error creating review: {ex.Message}");
         failureCount++;
       }
     }
 
-    _logger.LogInformation("Review seeding completed. Created {0} reviews. Failed: {1}", successCount, failureCount);
+    logger.LogInformation("Review seeding completed. Created {0} reviews. Failed: {1}", successCount, failureCount);
   }
 
-  private async Task SeedRentals()
+  public static async Task SeedRentals(MorentDbContext context, ILogger logger, IUserService userService)
   {
     // Skip if rentals already exist
-    if (await _dbContext.Rentals.AnyAsync())
+    if (await context.Rentals.AnyAsync())
     {
-      _logger.LogInformation("Rentals already exist - skipping rental seeding.");
+      logger.LogInformation("Rentals already exist - skipping rental seeding.");
       return;
     }
 
-    _logger.LogInformation("Starting rental seeding...");
+    logger.LogInformation("Starting rental seeding...");
 
-    var userService = service.GetRequiredService<IUserService>();
     var random = new Random();
 
     // Get all users and cars to create rentals
-    var users = await _dbContext.Users
+    var users = await context.Users
         .Where(u => u.Role != MorentUserRole.Admin) // Only regular users, not admins
         .ToListAsync();
 
-    var cars = await _dbContext.Cars
+    var cars = await context.Cars
         .Include(c => c.CarModel)
         .ToListAsync();
 
     if (!users.Any() || !cars.Any())
     {
-      _logger.LogInformation("No users or cars available for rental seeding.");
+      logger.LogInformation("No users or cars available for rental seeding.");
       return;
     }
 
-    _logger.LogInformation($"Found {users.Count} users and {cars.Count} cars for rental seeding.");
+    logger.LogInformation($"Found {users.Count} users and {cars.Count} cars for rental seeding.");
 
     // Create a list to track which cars are rented in which periods
     var carRentalPeriods = new Dictionary<Guid, List<DateRange>>();
@@ -706,7 +678,7 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
     int confirmedCount = 0;
     int reservedCount = 0;
 
-    _logger.LogInformation($"Target rental counts - Total: {totalRentals}, Completed: {completedTarget}, " +
+    logger.LogInformation($"Target rental counts - Total: {totalRentals}, Completed: {completedTarget}, " +
                      $"Active: {activeTarget}, Confirmed: {confirmedTarget}, Reserved: {reservedTarget}");
 
     for (int i = 0; i < totalRentals; i++)
@@ -818,7 +790,7 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
 
         if (!rentalResult.IsSuccess)
         {
-          _logger.LogInformation($"Failed to create rental: {string.Join(", ", rentalResult.Errors)}");
+          logger.LogInformation($"Failed to create rental: {string.Join(", ", rentalResult.Errors)}");
           failureCount++;
           i--; // Try again
           continue;
@@ -831,7 +803,7 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
         if (targetStatus != MorentRentalStatus.Reserved)
         {
           // Get the created rental
-          var rental = await _dbContext.Rentals
+          var rental = await context.Rentals
               .FirstOrDefaultAsync(r => r.Id == rentalResult.Value.Id);
 
           if (rental != null)
@@ -855,7 +827,7 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
               rental.CompleteRental();
             }
 
-            await _dbContext.SaveChangesAsync();
+            await context.SaveChangesAsync();
           }
         }
 
@@ -894,17 +866,17 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
       }
       catch (Exception ex)
       {
-        _logger.LogInformation($"Error creating rental: {ex.Message}");
+        logger.LogInformation($"Error creating rental: {ex.Message}");
         failureCount++;
       }
     }
 
-    _logger.LogInformation($"Rental seeding completed. Created {successCount} rentals. Failed: {failureCount}");
-    _logger.LogInformation($"Status breakdown - Completed: {completedCount}, Active: {activeCount}, " +
+    logger.LogInformation($"Rental seeding completed. Created {successCount} rentals. Failed: {failureCount}");
+    logger.LogInformation($"Status breakdown - Completed: {completedCount}, Active: {activeCount}, " +
                      $"Confirmed: {confirmedCount}, Reserved: {reservedCount}");
   }
 
-  private string GetRandomDescription()
+  public static string GetRandomDescription()
   {
     var descriptions = new[]
     {
@@ -921,17 +893,17 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
     return descriptions[new Random().Next(descriptions.Length)];
   }
 
-  public async Task CleanupOrphanedImages()
+  public static async Task CleanupOrphanedImages(IWebHostEnvironment env, ILogger logger, IRepository<MorentImage> imageRepository)
   {
     try
     {
-      _logger.LogInformation("Starting orphaned image cleanup...");
+      logger.LogInformation("Starting orphaned image cleanup...");
 
       // Get the uploads directory path
-      string uploadsDirectory = Path.Combine(_env.WebRootPath, "uploads");
+      string uploadsDirectory = Path.Combine(env.WebRootPath, "uploads");
       if (!Directory.Exists(uploadsDirectory))
       {
-        _logger.LogInformation("Uploads directory does not exist. Nothing to clean up.");
+        logger.LogInformation("Uploads directory does not exist. Nothing to clean up.");
         return;
       }
 
@@ -940,21 +912,21 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
           .Select(file => Path.GetRelativePath(uploadsDirectory, file).Replace("\\", "/"))
           .ToList();
 
-      _logger.LogInformation($"Found {filesOnDisk.Count} files on disk in uploads directory.");
+      logger.LogInformation($"Found {filesOnDisk.Count} files on disk in uploads directory.");
 
       // Get all image filenames from the database
-      var imagesInDb = (await _images.ListAsync()).AsQueryable()
+      var imagesInDb = (await imageRepository.ListAsync()).AsQueryable()
           .Select(img => img.Path)
           .ToList();
 
-      _logger.LogInformation($"Found {imagesInDb.Count} images registered in database.");
+      logger.LogInformation($"Found {imagesInDb.Count} images registered in database.");
 
       // Find files that exist on disk but not in the database
       var orphanedPersistedFiles = filesOnDisk.Except(imagesInDb).ToList();
       // Find files that exist on database but not in the disk
       var orphanedDatabaseFiles = imagesInDb.Except(filesOnDisk).ToList();
 
-      _logger.LogInformation($"Found {orphanedDatabaseFiles.Count} database image files to delete.");
+      logger.LogInformation($"Found {orphanedDatabaseFiles.Count} database image files to delete.");
 
       foreach (var fileName in orphanedDatabaseFiles)
       {
@@ -963,17 +935,17 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
           string filePath = Path.Combine(uploadsDirectory, fileName);
           if (!File.Exists(filePath))
           {
-            await _images.DeleteRangeAsync(new ImageByPathSpec(fileName));
-            _logger.LogInformation($"Deleted orphaned database images: {fileName}");
+            await imageRepository.DeleteRangeAsync(new ImageByPathSpec(fileName));
+            logger.LogInformation($"Deleted orphaned database images: {fileName}");
           }
         }
         catch (Exception ex)
         {
-          _logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
+          logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
         }
       }
 
-      _logger.LogInformation($"Found {orphanedPersistedFiles.Count} orphaned image files to delete.");
+      logger.LogInformation($"Found {orphanedPersistedFiles.Count} orphaned image files to delete.");
 
       foreach (var fileName in orphanedPersistedFiles)
       {
@@ -983,18 +955,158 @@ public class SeedData(IServiceProvider service, MorentDbContext context)
           if (File.Exists(filePath))
           {
             File.Delete(filePath);
-            _logger.LogInformation($"Deleted orphaned file: {fileName}");
+            logger.LogInformation($"Deleted orphaned file: {fileName}");
           }
         }
         catch (Exception ex)
         {
-          _logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
+          logger.LogInformation($"Error deleting file {fileName}: {ex.Message}");
         }
       }
     }
     catch (Exception ex)
     {
-      _logger.LogInformation($"Error during image cleanup: {ex.Message}");
+      logger.LogInformation($"Error during image cleanup: {ex.Message}");
     }
+  }
+
+  private static MorentCar CreateRandomCarWithModel(MorentCarModel model)
+  {
+    var random = new Random();
+    // Select a random car model from the dictionary
+
+    // Generate a random license plate
+    string licensePlate = $"{random.Next(100, 999)}-{GetRandomLetters(3)}-{random.Next(10, 99)}";
+
+    // Generate a random price per day based on car type
+    decimal pricePerDay = model.CarType switch
+    {
+      CarType.Luxury => random.Next(200, 501), // $200-$500
+      CarType.Sport => random.Next(150, 401),  // $150-$400
+      CarType.SUV => random.Next(80, 201),     // $80-$200
+      CarType.Sedan => random.Next(60, 151),   // $60-$150
+      CarType.Pickup => random.Next(90, 181),  // $90-$180
+      CarType.Hatchback => random.Next(40, 101), // $40-$100
+      _ => random.Next(50, 151)                // $50-$150 default
+    };
+
+    // Generate a random location
+    var location = Location.Create(
+      address: $"{random.Next(1, 999)} {Faker.Address.StreetName()}",
+      city: Faker.Address.City(),
+      country: Faker.Address.Country()
+    ).Value;
+
+    // Generate a description based on the car model
+    string description = $"Experience the {model.Year} {model.Brand} {model.ModelName}. " +
+                        $"This {model.CarType.ToString().ToLower()} car features a {model.Gearbox.ToString().ToLower()} transmission " +
+                        $"and runs on {model.FuelType.ToString().ToLower()} fuel. " +
+                        $"It comfortably seats {model.SeatCapacity} passengers and has a capacity of {model.SeatCapacity * 15}L for luggage. " +
+                        GetRandomDescription();
+
+    var pricePerDayResult = Money.Create(pricePerDay);
+
+    // Create the MorentCar instance and add it to the list
+    return new MorentCar(
+      modelId: model.Id,
+      licensePlate: licensePlate,
+      pricePerDay: pricePerDayResult.Value,
+      currentLocation: location,
+      description: description
+    );
+  }
+
+  private static MorentReview CreateRandomReview(Guid userId, Guid carId)
+  {
+    // Common review phrases
+    var positiveComments = new[]
+    {
+        "Great car! Very clean and ran perfectly.",
+        "Excellent condition and very comfortable for our trip.",
+        "The car was amazing! Would definitely rent again.",
+        "Perfect vehicle for our vacation. Very spacious and fuel-efficient.",
+        "The car was delivered on time and in pristine condition.",
+        "Smooth ride and excellent handling. Very satisfied!",
+        "The car exceeded my expectations. Great experience overall.",
+        "Very reliable vehicle with good gas mileage.",
+        "Clean, well-maintained car. No issues whatsoever.",
+        "Luxury experience at a reasonable price. Highly recommended!"
+    };
+
+    var mixedComments = new[]
+    {
+        "Good car overall, though it had a few minor issues.",
+        "Decent vehicle for the price. Nothing extraordinary but got the job done.",
+        "Car was clean but not as fuel-efficient as expected.",
+        "Good experience overall, but pickup process was a bit slow.",
+        "The car served its purpose well, but the AC wasn't working properly.",
+        "Good value, but there were some minor mechanical issues.",
+        "Car was okay, but had some scratches that weren't listed.",
+        "Decent experience. The car was a bit older than expected.",
+        "Generally satisfied, though the interior showed signs of wear.",
+        "Car worked fine but wasn't as clean as I expected."
+    };
+
+    var negativeComments = new[]
+    {
+        "Car had several issues that weren't disclosed beforehand.",
+        "Not satisfied with the cleanliness of the vehicle.",
+        "Several mechanical problems during our trip. Not recommended.",
+        "The car was much older than advertised.",
+        "Poor condition and unreliable. Had to call roadside assistance.",
+        "Disappointing experience. The car broke down during our trip.",
+        "Vehicle was not properly maintained. Had safety concerns.",
+        "Car was delivered late and dirty. Very disappointing.",
+        "Terrible fuel economy and uncomfortable seats.",
+        "Many undisclosed issues with the car. Would not rent again."
+    };
+
+    var random = new Random();
+    // Generate random rating (1-5)
+    // Weighted distribution: 5★: 40%, 4★: 30%, 3★: 15%, 2★: 10%, 1★: 5%
+    int rating;
+    double ratingRoll = random.NextDouble();
+    if (ratingRoll < 0.05) rating = 1;
+    else if (ratingRoll < 0.15) rating = 2;
+    else if (ratingRoll < 0.30) rating = 3;
+    else if (ratingRoll < 0.60) rating = 4;
+    else rating = 5;
+
+    // Select appropriate comment based on rating
+    string comment;
+    if (rating >= 4)
+    {
+      comment = positiveComments[random.Next(positiveComments.Length)];
+    }
+    else if (rating >= 3)
+    {
+      comment = mixedComments[random.Next(mixedComments.Length)];
+    }
+    else
+    {
+      comment = negativeComments[random.Next(negativeComments.Length)];
+    }
+
+    // Add some custom details to make reviews more unique
+    if (random.NextDouble() > 0.7)
+    {
+      var additionalDetails = new[]
+      {
+                    " The pickup and dropoff process was seamless.",
+                    " Would definitely recommend this car.",
+                    " Perfect for a family trip.",
+                    " Great for city driving.",
+                    " Ideal for long road trips.",
+                    " The owner was very helpful and responsive.",
+                    " The car was very fuel efficient.",
+                    " Loved the entertainment system.",
+                    " The GPS was very helpful during our trip.",
+                    " All the features worked flawlessly."
+                };
+
+      comment += additionalDetails[random.Next(additionalDetails.Length)];
+    }
+
+    return MorentReview.Create(userId, carId, rating, comment);
   }
 }

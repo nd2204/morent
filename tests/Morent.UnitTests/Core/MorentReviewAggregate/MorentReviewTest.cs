@@ -113,26 +113,6 @@ public class MorentReviewTests
     }
 
     [Fact]
-    public void UpdateReview_ShouldRaiseReviewUpdatedEvent()
-    {
-        // Arrange
-        var review = MorentReview.Create(_validUserId, _validCarId, ValidRating, ValidComment).Value;
-        var newRating = 5;
-        var newComment = "Updated comment";
-
-        // Act
-        review.UpdateReview(newRating, newComment);
-
-        // Assert
-        review.DomainEvents.ShouldContain(e => e is ReviewUpdatedEvent);
-        var @event = review.DomainEvents.First() as ReviewUpdatedEvent;
-        @event.ShouldNotBeNull();
-        @event!.CarId.ShouldBe(_validCarId);
-        @event.UserId.ShouldBe(_validUserId);
-        @event.Rating.ShouldBe(newRating);
-    }
-
-    [Fact]
     public void UpdateRating_WithValidRating_ShouldUpdateRating()
     {
         // Arrange

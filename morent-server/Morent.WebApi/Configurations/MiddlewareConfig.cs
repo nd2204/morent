@@ -63,17 +63,17 @@ public static class MiddlewareConfig
   {
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
     try
     {
       var context = services.GetRequiredService<MorentDbContext>();
       //          context.Database.Migrate();
       context.Database.EnsureCreated();
-      await new SeedData(services, context).InitializeAsync();
+      await SeedData.InitializeAsync(services, logger);
     }
     catch (Exception ex)
     {
-      var logger = services.GetRequiredService<ILogger<Program>>();
       logger.LogError(ex, "An error occurred seeding the DB. {exceptionMessage}", ex.Message);
     }
   }

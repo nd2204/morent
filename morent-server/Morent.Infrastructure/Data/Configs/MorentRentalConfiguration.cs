@@ -25,7 +25,7 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
       .OnDelete(DeleteBehavior.Restrict);
 
     // Configure Money Value Object for Cost
-    builder.ComplexProperty(r => r.TotalCost, cost =>
+    builder.OwnsOne(r => r.TotalCost, cost =>
     {
       cost.Property(p => p.Amount)
         .HasColumnName("CostAmount")
@@ -39,7 +39,7 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
     });
 
     // Configure DateRange Value Object
-    builder.ComplexProperty(r => r.RentalPeriod, r =>
+    builder.OwnsOne(r => r.RentalPeriod, r =>
     {
       r.Property(d => d.Start)
       .IsRequired();
@@ -49,7 +49,7 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
     });
 
     // Configure Location Value Objects
-    builder.ComplexProperty(r => r.PickupLocation, location =>
+    builder.OwnsOne(r => r.PickupLocation, location =>
     {
       location.Property(l => l.Country)
         .HasColumnName("PickupCountry")
@@ -63,7 +63,7 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
         .HasColumnName("PickupCity");
     });
 
-    builder.ComplexProperty(r => r.DropoffLocation, location =>
+    builder.OwnsOne(r => r.DropoffLocation, location =>
     {
       location.Property(l => l.Country)
         .HasColumnName("DropoffCountry")

@@ -19,7 +19,7 @@ public static class ServiceConfig
   )
   {
     services
-      .AddInfrastructureServices(logger, builder.Configuration)
+      .AddInfrastructureServices(logger, builder.Configuration, builder.Environment.EnvironmentName)
       .AddCoreServices(logger)
       .AddMediatrConfigs()
       .AddGoogleConfigs(builder.Configuration)

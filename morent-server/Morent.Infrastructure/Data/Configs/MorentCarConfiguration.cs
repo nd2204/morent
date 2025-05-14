@@ -13,7 +13,7 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
       .HasForeignKey(x => x.CarModelId);
 
     // Configure Money Value Object
-    builder.ComplexProperty(c => c.PricePerDay, price =>
+    builder.OwnsOne(c => c.PricePerDay, price =>
     {
       price.Property(p => p.Amount)
         .HasColumnName("PriceAmount")
@@ -26,7 +26,12 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
         .IsRequired();
     });
 
-    builder.ComplexProperty(c => c.CurrentLocation, c => { c.IsRequired(); });
+    builder.OwnsOne(c => c.CurrentLocation, c => { 
+      c.Property(c => c.Address).IsRequired(); 
+      c.Property(c => c.City).IsRequired(); 
+      c.Property(c => c.Country).IsRequired(); 
+    });
+
     builder
     .Navigation(c => c.CarModel)
     .AutoInclude();
