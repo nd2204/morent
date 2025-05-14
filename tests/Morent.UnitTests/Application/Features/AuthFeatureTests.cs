@@ -10,7 +10,7 @@ using Morent.Core.ValueObjects;
 using Ardalis.Result;
 using Morent.Application.Features.User.DTOs;
 
-namespace Morent.UnitTests.Features.Auth;
+namespace Morent.UnitTest.Features;
 
 public class AuthFeatureTests
 {

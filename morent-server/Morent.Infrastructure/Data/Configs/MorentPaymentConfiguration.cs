@@ -13,7 +13,7 @@ public class MorentPaymentConfiguration : IEntityTypeConfiguration<MorentPayment
     builder.Property(p => p.TransactionId);
 
     // Configure Money Value Object for Amount
-    builder.ComplexProperty(r => r.PaymentAmount, r =>
+    builder.OwnsOne(r => r.PaymentAmount, r =>
     {
       r.Property(p => p.Amount)
         // .HasColumnName("PaymentAmount")

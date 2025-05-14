@@ -70,35 +70,46 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<MorentCar>> GetCarsByModelAsync(string brand, string modelName, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<MorentCar>> GetCarsByModelAsync(string modelName, CancellationToken cancellationToken = default)
     {
-        var cars = (await GetCarsByBrandAsync(brand, cancellationToken)).AsQueryable();
-        cars = cars.Where(
-            c => c.CarModel.ModelName.ToLower() == modelName.ToLower());
-        return cars;
+        return await _context.Cars
+            .Include(c => c.CarModel)
+            .Include(c => c.Images)
+            .Where(c => c.CarModel.ModelName.ToLower() == modelName.ToLower())
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<MorentCarModel>> GetCarModelsByQuery(string brand, string modelName, int? year, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<MorentCarModel>> GetCarModelsByQuery(string? brand, string? modelName, int? year, CancellationToken cancellationToken = default)
     {
-        return await _context.CarModels
-            .Where(m => m.Brand.ToLower() == brand.ToLower() &&
-                        m.ModelName.ToLower() == modelName &&
-                        year == null ? m.Year == year : true)
+        // Start with a base query
+        var query = _context.CarModels.AsQueryable();
+
+        // Apply filters progressively
+        if (!string.IsNullOrWhiteSpace(brand))
+            query = query.Where(m => m.Brand.ToLower() == brand.ToLower());
+
+        if (!string.IsNullOrWhiteSpace(modelName))
+            query = query.Where(m => m.ModelName.ToLower() == modelName.ToLower());
+
+        if (year.HasValue)
+            query = query.Where(m => m.Year == year.Value);
+
+        // Execute the query and return results
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<MorentCar?> GetCarWithImagesAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Cars
+            .Include(c => c.Images)
+            .Where(c => c.Id == id)
+            .SingleOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<MorentRental>> GetActiveRentalsForCarAsync(Guid carId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Rentals
+            .Where(r => r.CarId == carId)
             .ToListAsync();
     }
-
-  public async Task<MorentCar?> GetCarWithImagesAsync(Guid id, CancellationToken cancellationToken = default)
-  {
-    return await _context.Cars
-        .Include(c => c.Images)
-        .Where(c => c.Id == id)
-        .SingleOrDefaultAsync();
-  }
-
-  public async Task<IEnumerable<MorentRental>> GetActiveRentalsForCarAsync(Guid carId, CancellationToken cancellationToken = default)
-  {
-    return await _context.Rentals
-        .Where(r => r.CarId == carId)
-        .ToListAsync();
-  }
 }

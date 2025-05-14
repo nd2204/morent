@@ -31,7 +31,7 @@ public class MorentUserConfiguration : IEntityTypeConfiguration<MorentUser>
             .OnDelete(DeleteBehavior.Restrict);
 
         // Configure Email Value Object
-        builder.ComplexProperty(u => u.Email, email =>
+        builder.OwnsOne(u => u.Email, email =>
         {
             email.Property(e => e.Value)
                  .HasColumnName("Email")

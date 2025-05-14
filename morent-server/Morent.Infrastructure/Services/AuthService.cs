@@ -78,13 +78,23 @@ public class AuthService : IAuthService
     return new JwtSecurityTokenHandler().WriteToken(token);
   }
 
-
   public string HashPassword(string password)
+  {
+    return _HashPassword(password);
+  }
+
+  public bool VerifyPassword(string password, string passwordHash)
+  {
+    return _VerifyPassword(password, passwordHash);
+  }
+
+
+  public static string _HashPassword(string password)
   {
     return BCrypt.Net.BCrypt.HashPassword(password, 12);
   }
 
-  public bool VerifyPassword(string password, string passwordHash)
+  public static bool _VerifyPassword(string password, string passwordHash)
   {
     return BCrypt.Net.BCrypt.Verify(password, passwordHash);
   }
