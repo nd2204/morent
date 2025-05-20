@@ -4,43 +4,55 @@ namespace Morent.Core.ValueObjects;
 
 public class Location : ValueObject
 {
-  public string Address { get; private set; }
-  public string City { get; private set; }
-  public string Country { get; private set; }
+  public string? Address { get; private set; }
+  public string? City { get; private set; }
+  public string? Country { get; private set; }
+  public double Longitude { get; private set; }
+  public double Latitude { get; private set; }
 
   private Location() { } // For EF Core
 
-  private Location(string address, string city, string country)
+  private Location(string? address, string? city, string? country, double longitude, double latitude)
   {
-    Guard.Against.NullOrEmpty(address, nameof(address));
-    Guard.Against.NullOrEmpty(city, nameof(city));
-    Guard.Against.NullOrEmpty(country, nameof(country));
-
     Address = address;
     City = city;
     Country = country;
+    Longitude = longitude;
+    Latitude = latitude;
   }
 
-  public static Result<Location> Create(string address, string city, string country)
+  public static Result<Location> Create(string? address, string? city, string? country, double longitude, double latitude)
   {
-    if (string.IsNullOrEmpty(address))
-      return Result.Invalid(new ValidationError(nameof(address), "must not be null or empty"));
+    var validateResult = VerifyLocation(longitude, latitude);
+    if (!validateResult.IsSuccess)
+      return validateResult;
 
-    if (string.IsNullOrEmpty(city))
-      return Result.Invalid(new ValidationError(nameof(city), "must not be null or empty"));
+    return Result.Success(new Location(address, city, country, longitude, latitude));
+  }
 
-    if (string.IsNullOrEmpty(country))
-      return Result.Invalid(new ValidationError(nameof(country), "must not be null or empty"));
+  public static Result<Location> CreateGeoLocOnly(double longitude, double latitude)
+  {
+    var validateResult = VerifyLocation(longitude, latitude);
+    if (!validateResult.IsSuccess)
+      return validateResult;
 
-    return Result.Success(new Location(address, city, country));
+    return Result.Success(new Location("", "", "", longitude, latitude));
+  }
+  private static Result VerifyLocation(double longitude, double latitude)
+  {
+    if (longitude < -180 || longitude > 180)
+      return Result.Invalid(new ValidationError("longitude must be in the range from -180 to 180"));
+
+    if (latitude < -90 || latitude > 90)
+      return Result.Invalid(new ValidationError("latitude must be in the range from -90 to 90"));
+
+    return Result.NoContent();
   }
 
   protected override IEnumerable<object> GetEqualityComponents()
   {
-    yield return Address;
-    yield return City;
-    yield return Country;
+    yield return Longitude;
+    yield return Latitude;
   }
-
   public override string ToString() => $"{Address}, {City}, {Country}";
 }

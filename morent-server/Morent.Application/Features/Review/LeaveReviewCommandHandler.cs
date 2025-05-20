@@ -14,7 +14,7 @@ public class LeaveReviewCommandHandler : ICommandHandler<LeaveReviewCommand, Res
   public async Task<Result<ReviewDto>> Handle(LeaveReviewCommand command, CancellationToken cancellationToken)
   {
     return await _userService.LeaveReviewAsync(
-      command.CarId,
+      command.UserId,
       command.Request.RentalId,
       command.Request.Rating,
       command.Request.Comment

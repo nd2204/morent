@@ -6,6 +6,7 @@ public class MorentRental : EntityBase<Guid>, IAggregateRoot
 {
   public Guid UserId { get; private set; }
   public Guid CarId { get; private set; }
+  public MorentCar Car { get; private set; }
   public DateRange RentalPeriod { get; private set; }
   public Location PickupLocation { get; private set; }
   public Location DropoffLocation { get; private set; }

@@ -7,6 +7,6 @@ public class CreateCarCommand : ICommand<Result<Guid>>
   public string LicensePlate { get; set; } = null!;
   public decimal PricePerDay { get; set; }
   public string Currency { get; set; } = null!;
-  public CarLocationDto Location { get; set; } = null!;
+  public LocationDto Location { get; set; } = null!;
   public List<UploadCarImageRequest> Images { get; set; } = null!;
 }

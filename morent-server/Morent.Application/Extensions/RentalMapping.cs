@@ -13,18 +13,8 @@ public static class RentalMapping
       CarId = rental.CarId,
       PickupDate = rental.RentalPeriod.Start,
       DropoffDate = rental.RentalPeriod.End,
-      PickupLocation = new CarLocationDto
-      {
-        City = rental.PickupLocation.City,
-        Address = rental.PickupLocation.Address,
-        Country = rental.PickupLocation.Country
-      },
-      DropoffLocation = new CarLocationDto
-      {
-        City = rental.DropoffLocation.City,
-        Address = rental.DropoffLocation.Address,
-        Country = rental.DropoffLocation.Country
-      },
+      PickupLocation = rental.PickupLocation.ToDto(),
+      DropoffLocation = rental.DropoffLocation.ToDto(),
       TotalCost = rental.TotalCost.Amount,
       Status = rental.Status.ToString(),
       Currency = rental.TotalCost.Currency,

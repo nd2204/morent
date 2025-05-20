@@ -1,4 +1,5 @@
 using Morent.Core.MediaAggregate;
+using Morent.Core.MorentPaymentAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data.Configs;
 
@@ -17,6 +18,8 @@ public class MorentDbContext(
   public DbSet<MorentRental> Rentals => Set<MorentRental>();
   public DbSet<MorentReview> Reviews => Set<MorentReview>();
   public DbSet<MorentImage> Images => Set<MorentImage>();
+  public DbSet<MorentPayment> Payments => Set<MorentPayment>();
+  public DbSet<PaymentProvider> PaymentMethods => Set<PaymentProvider>();
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {

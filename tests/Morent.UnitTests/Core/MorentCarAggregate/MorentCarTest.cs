@@ -15,7 +15,7 @@ using Xunit;
     private readonly Guid _modelId = Guid.NewGuid();
     private readonly string _licensePlate = "ABC-123";
     private readonly Money _price = Money.Create(100m).Value;
-    private readonly Location _location = Location.Create("123 Main St", "New York", "USA").Value;
+    private readonly Location _location = Location.CreateGeoLocOnly(100, 40).Value;
     private readonly string _description = "Test car description";
 
     [Fact]
@@ -110,7 +110,7 @@ using Xunit;
     {
       // Arrange
       var car = new MorentCar(_modelId, _licensePlate, _price, _location);
-      var newLocationResult = Location.Create("456 Elm St", "Chicago", "USA");
+      var newLocationResult = Location.CreateGeoLocOnly(120, 50);
 
       // Act
       car.UpdateLocation(newLocationResult.Value);

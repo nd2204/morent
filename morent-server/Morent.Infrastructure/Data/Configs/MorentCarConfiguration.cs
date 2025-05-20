@@ -26,10 +26,22 @@ public class MorentCarConfiguration : IEntityTypeConfiguration<MorentCar>
         .IsRequired();
     });
 
-    builder.OwnsOne(c => c.CurrentLocation, c => { 
-      c.Property(c => c.Address).IsRequired(); 
-      c.Property(c => c.City).IsRequired(); 
-      c.Property(c => c.Country).IsRequired(); 
+    builder.OwnsOne(c => c.CurrentLocation, location => {
+      location.Property(l => l.Address).HasColumnName("LocationAddress");
+      location.Property(l => l.City).HasColumnName("LocationCity");
+      location.Property(l => l.Country).HasColumnName("LocationCountry");
+      location.Property(l => l.Longitude).HasColumnName("LocationLongitude");
+      location.Property(l => l.Latitude).HasColumnName("LocationLatitude");
+
+      // Optional: Configure string lengths or other constraints
+      location.Property(l => l.Address).HasMaxLength(200);
+      location.Property(l => l.City).HasMaxLength(100);
+      location.Property(l => l.Country).HasMaxLength(100);
+
+      // Optional: Allow nulls for string properties if needed
+      location.Property(l => l.Address).IsRequired(false);
+      location.Property(l => l.City).IsRequired(false);
+      location.Property(l => l.Country).IsRequired(false);
     });
 
     builder

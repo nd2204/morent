@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status200OK)]
+    [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType<AuthResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponse>> Signup([FromBody] RegisterUserCommand request)
     {

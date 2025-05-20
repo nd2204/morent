@@ -7,8 +7,8 @@ public class RentalDto
   public required Guid CarId { get; set; }
   public required DateTime PickupDate { get; set; }
   public required DateTime DropoffDate { get; set; }
-  public required CarLocationDto PickupLocation { get; set; } = null!;
-  public required CarLocationDto DropoffLocation { get; set; } = null!;
+  public required LocationDto PickupLocation { get; set; } = null!;
+  public required LocationDto DropoffLocation { get; set; } = null!;
   public required decimal TotalCost { get; set; }
   public required string Currency { get; set; } = null!;
   public required string Status { get; set; }

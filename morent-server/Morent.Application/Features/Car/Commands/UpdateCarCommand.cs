@@ -9,7 +9,7 @@ public class UpdateCarCommand : ICommand<Result>
   public decimal PricePerDay { get; set; }
   public string Currency { get; set; } = null!;
   public bool IsAvailable { get; set; }
-  public CarLocationDto Location { get; set; } = null!;
+  public LocationDto Location { get; set; } = null!;
   public List<UploadCarImageRequest> ImagesToAdd { get; set; } = null!;
   public List<Guid> ImagesToDelete { get; set; } = null!;
 }

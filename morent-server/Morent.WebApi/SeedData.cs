@@ -2,14 +2,17 @@ using Ardalis.Result;
 using Ardalis.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Morent.Application.Interfaces;
+using Morent.Core.Exceptions;
 using Morent.Core.MediaAggregate;
 using Morent.Core.MediaAggregate.Specifications;
 using Morent.Core.MorentCarAggregate;
+using Morent.Core.MorentPaymentAggregate;
 using Morent.Core.MorentRentalAggregate;
 using Morent.Core.MorentReviewAggregate;
 using Morent.Core.MorentUserAggregate;
 using Morent.Core.ValueObjects;
 using Morent.Infrastructure.Data;
+using Morent.Infrastructure.Payment;
 using Morent.Infrastructure.Services;
 
 public static class SeedData
@@ -17,8 +20,10 @@ public static class SeedData
   public static int NUM_CARS_TO_SEED = 50;
 
   // =============================================================================
-  // Users
-  // =============================================================================
+  // User
+  // ============================================================================
+
+  private static Random _random = new Random();
 
   public static MorentUser admin1 = MorentUser.CreateAdmin(
     "Morent LLC",
@@ -72,7 +77,6 @@ public static class SeedData
   // =============================================================================
   // Car Models
   // =============================================================================
-
   public static MorentCarModel KoenigseggCCGT = new MorentCarModel(
       Guid.NewGuid(), "Koenigsegg", "CCGT", 2007,
       FuelType.Gasoline, GearBoxType.Manual, CarType.Sport, 100, 2);
@@ -164,8 +168,12 @@ public static class SeedData
   public static MorentCar Hyundaii10Car = CreateRandomCarWithModel(Hyundaii10);
 
   // =============================================================================
-  // Car Reviews
+  // Payment Methods
   // =============================================================================
+
+  public static PaymentProvider Momo = new PaymentProvider(MoMoPaymentProvider.Id, "MoMo E-Wallet", null, 0);
+  public static PaymentProvider Vnpay = new PaymentProvider(VNPayPaymentMethod.Id, "VNPay", null, 1.5m);
+  public static PaymentProvider Stripe = new PaymentProvider(StripePaymentProvider.Id, "Credit/Debit Card", null, 2.9m);
 
   public static Dictionary<string, MorentCarModel> CarModels = new Dictionary<string, MorentCarModel>
   {
@@ -187,7 +195,6 @@ public static class SeedData
     ["Hyundaii10"] = Hyundaii10,
     ["KiaMorning"] = KiaMorning
   };
-
   public static async Task InitializeAsync(IServiceProvider service, ILogger logger)
   {
     MorentDbContext context = service.GetRequiredService<MorentDbContext>();
@@ -224,6 +231,8 @@ public static class SeedData
     }
 
     await SeedUserProfileImage(context, userProfileService);
+
+    await SeedPaymentMethods(imageRepository, env, context, imageService);
   }
 
   public static async Task PopulateTestData(IServiceProvider service, ILogger logger)
@@ -298,11 +307,10 @@ public static class SeedData
 
     // Create a list to hold all cars
     var carsList = new List<MorentCar>();
-    var random = new Random();
 
     for (int i = 0; i < NUM_CARS_TO_SEED; i++)
     {
-      var randomModelKey = SavedModelIds.Keys.ElementAt(random.Next(SavedModelIds.Count));
+      var randomModelKey = SavedModelIds.Keys.ElementAt(_random.Next(SavedModelIds.Count));
       var modelInfo = CarModels[randomModelKey]; // For reference to car properties
       carsList.Add(CreateRandomCarWithModel(modelInfo));
     }
@@ -368,28 +376,14 @@ public static class SeedData
           .Select(i => i.Id)
           .ToListAsync();
 
+      // Seed images if empty
       if (!imageIds.Any())
       {
-        // Upload new images if none exist
-        var assetPath = Path.Combine(env.WebRootPath, "..", "SeedData", "uploads");
-        string[] filePaths = Directory.GetFiles(assetPath);
-
-        foreach (var filePath in filePaths)
-        {
-          using Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-          var response = await imageService.UploadImageAsync(new ImageUploadRequest
-          {
-            ImageData = stream,
-            FileName = Path.GetFileName(filePath),
-            ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
-          });
-          if (response != null)
-          {
-            imageIds.Add(response.Value.ImageId);
-          }
-        }
+        var responses = await SeedImagesFromDir(env, imageService, "uploads");
+        responses.ForEach(r => imageIds.Add(r.ImageId));
       }
 
+      // return if still empty after seeding
       if (!imageIds.Any())
       {
         logger.LogInformation("No images available for seeding.");
@@ -397,10 +391,9 @@ public static class SeedData
       }
 
       if (!(await imageService.GetPlaceHolderImageAsync()).IsSuccess)
-        await SeedPlaceholderImages(env, imageService);
+        await SeedImagesFromDir(env, imageService, "placeholder");
 
       // Process cars one by one with clear context between operations
-      var random = new Random();
       int successCount = 0;
       int failureCount = 0;
 
@@ -411,7 +404,8 @@ public static class SeedData
           // Clear the change tracker before each operation
           context.ChangeTracker.Clear();
 
-          var fileName = $"{car.CarModel.Brand.ToLower()}-{car.CarModel.ModelName.ToLower()}-1.png";
+          var carModelName = car.CarModel.ModelName.Replace(" ", "_");
+          var fileName = $"{car.CarModel.Brand.ToLower()}-{carModelName.ToLower()}-1.png";
           var image = await imageRepository.FirstOrDefaultAsync(new ImageByFileNameSpec(fileName));
           if (image != null)
           {
@@ -426,7 +420,7 @@ public static class SeedData
           else
           {
             logger.LogInformation($"No images with name {fileName} found. Assigning random");
-            int index = random.Next(imageIds.Count);
+            int index = _random.Next(imageIds.Count);
             var imageId = imageIds[index];
             await AssignCarImageDirectly(context, car.Id, imageId);
             successCount++;
@@ -448,10 +442,11 @@ public static class SeedData
     }
   }
 
-  public static async Task SeedPlaceholderImages(IWebHostEnvironment env, IImageService imageService)
+  public static async Task<List<ImageUploadResponse>> SeedImagesFromDir(IWebHostEnvironment env, IImageService imageService, string directoryName)
   {
-    var assetPath = Path.Combine(env.WebRootPath, "..", "SeedData", "placeholder");
+    var assetPath = Path.Combine(env.WebRootPath, "..", "SeedData", directoryName);
     string[] filePaths = Directory.GetFiles(assetPath);
+    var responses = new List<ImageUploadResponse>();
 
     foreach (var filePath in filePaths)
     {
@@ -462,7 +457,13 @@ public static class SeedData
         FileName = Path.GetFileName(filePath),
         ContentType = GetContentTypeFromExtension(Path.GetExtension(filePath))
       });
+      if (response != null)
+      {
+        responses.Add(response);
+      }
     }
+
+    return responses;
   }
 
   // New method to directly insert car image records
@@ -497,13 +498,6 @@ public static class SeedData
 
     // Create new car image entity directly
     var carImage = new MorentCarImage(carId, imageId, !hasPrimaryImage, nextDisplayOrder);
-
-    // If this will be primary and there are existing primary images, update them first
-    if (!hasPrimaryImage)
-    {
-      // This will be the first image, so it will be primary
-      // No need to update other images
-    }
 
     // Add the new car image
     context.CarImages.Add(carImage);
@@ -544,6 +538,48 @@ public static class SeedData
         await userProfileService.UpdateUserProfileImageAsync(user.Id, $"https://i.pravatar.cc/150?u={user.Name.Split(" ")[0].ToLower()}");
     }
   }
+
+  public static async Task SeedPaymentMethods(IRepository<MorentImage> imageRepository, IWebHostEnvironment env, MorentDbContext context, IImageService imageService)
+  {
+    if (!context.PaymentMethods.Any())
+    {
+      await context.PaymentMethods.AddRangeAsync(
+        Momo, Vnpay, Stripe
+      );
+      await context.SaveChangesAsync();
+      await SeedPaymentImages(imageRepository, env, context, imageService);
+    }
+  }
+
+  public static async Task SeedPaymentImages(IRepository<MorentImage> imageRepository, IWebHostEnvironment env, MorentDbContext context, IImageService imageService)
+  {
+    if (!(Momo.LogoImageId.HasValue && Vnpay.LogoImageId.HasValue && Stripe.LogoImageId.HasValue))
+    {
+      await SeedImagesFromDir(env, imageService, "logos");
+    }
+
+    await SeedPaymentImagesForPaymentMethod(Momo, "momo.png", imageRepository, env, context);
+    await SeedPaymentImagesForPaymentMethod(Vnpay, "vnpay.png", imageRepository, env, context);
+    await SeedPaymentImagesForPaymentMethod(Stripe, "stripe.png", imageRepository, env, context);
+  }
+
+  public static async Task SeedPaymentImagesForPaymentMethod(PaymentProvider provider, string fileName, IRepository<MorentImage> imageRepository, IWebHostEnvironment env, MorentDbContext context)
+  {
+    if (provider.LogoImageId.HasValue) return;
+
+    var image = await imageRepository.FirstOrDefaultAsync(new ImageByFileNameSpec(fileName));
+    if (image != null)
+    {
+      var filePath = Path.Combine(env.WebRootPath, "uploads", image.Path);
+      if (File.Exists(filePath))
+      {
+        provider.LogoImageId = image.Id;
+        context.PaymentMethods.Update(provider);
+        await context.SaveChangesAsync();
+      }
+    }
+  }
+
 
   public static string GetRandomLetters(int count)
   {
@@ -753,14 +789,8 @@ public static class SeedData
           }
         }
 
-        // Create random locations
-        var cities = new[] { "New York", "Los Angeles", "Chicago", "Miami", "Seattle", "Boston", "Austin", "San Francisco", "Denver", "Philadelphia" };
-        var pickupCity = cities[random.Next(cities.Length)];
-        var dropoffCity = random.NextDouble() > 0.7 ? cities[random.Next(cities.Length)] : pickupCity; // 30% chance of different city
-
-        var pickupAddress = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}";
-        var dropoffAddress = dropoffCity == pickupCity && random.NextDouble() > 0.5 ?
-                            pickupAddress : $"{random.Next(100, 9999)} {Faker.Address.StreetName()}";
+        var randomPickupLocation = GenerateRandomLocation(21.079608, 105.7835262, 5);
+        var randomDropoffLocation = GenerateRandomLocation(21.079608, 105.7835262, 5);
 
         // Create request DTO
         var rentalRequest = new CreateRentalRequest
@@ -768,17 +798,15 @@ public static class SeedData
           CarId = car.Id,
           PickupDate = pickupDate,
           DropoffDate = dropoffDate,
-          PickupLocation = new CarLocationDto
+          PickupLocation = new LocationDto
           {
-            City = pickupCity,
-            Address = pickupAddress,
-            Country = "North America"
+            Longitude = randomPickupLocation.Longitude,
+            Latitude = randomPickupLocation.Latitude,
           },
-          DropoffLocation = new CarLocationDto
+          DropoffLocation = new LocationDto
           {
-            City = dropoffCity,
-            Address = dropoffAddress,
-            Country = "North America"
+            Longitude = randomDropoffLocation.Longitude,
+            Latitude = randomDropoffLocation.Latitude,
           },
         };
 
@@ -787,7 +815,11 @@ public static class SeedData
 
         if (!rentalResult.IsSuccess)
         {
-          logger.LogInformation($"Failed to create rental: {string.Join(", ", rentalResult.Errors)}");
+          if (rentalResult.IsInvalid())
+            logger.LogInformation($"Failed to create rental: {rentalResult.ValidationErrors.First().ErrorMessage}");
+          else {
+            logger.LogInformation($"Failed to create rental: {rentalResult.Errors}");
+          }
           failureCount++;
           i--; // Try again
           continue;
@@ -834,23 +866,23 @@ public static class SeedData
         if (random.NextDouble() < 0.1)
         {
           // Create an extra rental that will be cancelled
+          var pickup = GenerateRandomLocation(21.079608, 105.7835262, 5);
+          var dropoff = GenerateRandomLocation(21.079608, 105.7835262, 5);
           var cancelRentalResult = await userService.CreateRentalAsync(user.Id, car.Id, new CreateRentalRequest
           {
             CarId = car.Id,
             PickupDate = DateTime.UtcNow.AddDays(random.Next(7, 30)),
             DropoffDate = DateTime.UtcNow.AddDays(random.Next(31, 45)),
-            PickupLocation = new CarLocationDto
+            PickupLocation = new LocationDto
             {
-              City = cities[random.Next(cities.Length)],
-              Address = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}",
-              Country = "North America"
+              Longitude = pickup.Longitude,
+              Latitude = pickup.Latitude,
             },
-            DropoffLocation = new CarLocationDto
+            DropoffLocation = new LocationDto
             {
-              City = cities[random.Next(cities.Length)],
-              Address = $"{random.Next(100, 9999)} {Faker.Address.StreetName()}",
-              Country = "North America"
-            }
+              Longitude = dropoff.Longitude,
+              Latitude = dropoff.Latitude,
+            },
           });
 
           if (cancelRentalResult.IsSuccess)
@@ -987,12 +1019,19 @@ public static class SeedData
       _ => random.Next(50, 151)                // $50-$150 default
     };
 
-    // Generate a random location
-    var location = Location.Create(
-      address: $"{random.Next(1, 999)} {Faker.Address.StreetName()}",
-      city: Faker.Address.City(),
-      country: Faker.Address.Country()
-    ).Value;
+    // Generate a random location around a predefined 
+    var randomLocation = GenerateRandomLocation(21.079608, 105.7835262, 5);
+    var location = Location.CreateGeoLocOnly(
+      longitude: randomLocation.Longitude,
+      latitude: randomLocation.Latitude
+    );
+    if (!location.IsSuccess)
+    {
+      if (location.IsError())
+        throw new DomainException(location.Errors.First());
+      if (location.IsInvalid())
+        throw new DomainException(location.ValidationErrors.First().ErrorMessage);
+    }
 
     // Generate a description based on the car model
     string description = $"Experience the {model.Year} {model.Brand} {model.ModelName}. " +
@@ -1105,5 +1144,54 @@ public static class SeedData
     }
 
     return MorentReview.Create(userId, carId, rating, comment);
+  }
+
+  public static (double Latitude, double Longitude) GenerateRandomLocation(
+          double centerLat,
+          double centerLon,
+          double radiusInKm)
+  {
+    // Earth's radius in kilometers
+    const double EARTH_RADIUS = 6371.0;
+
+    // Convert radius from kilometers to radians
+    double radiusInRadians = radiusInKm / EARTH_RADIUS;
+
+    // Generate random distance and angle
+    double u = _random.NextDouble(); // Random value between 0 and 1
+    double v = _random.NextDouble();
+    double w = radiusInRadians * Math.Sqrt(u);
+    double t = 2 * Math.PI * v;
+
+    // Calculate offsets in x and y directions
+    double x = w * Math.Cos(t);
+    double y = w * Math.Sin(t);
+
+    // Convert center coordinates to radians
+    double centerLatRad = DegreesToRadians(centerLat);
+    double centerLonRad = DegreesToRadians(centerLon);
+
+    // Adjust for spherical coordinates
+    double newLatRad = centerLatRad + y;
+    double newLonRad = centerLonRad + x / Math.Cos(centerLatRad);
+
+    // Convert back to degrees
+    double newLat = RadiansToDegrees(newLatRad);
+    double newLon = RadiansToDegrees(newLonRad);
+
+    // Ensure longitude is within -180 to 180
+    newLon = ((newLon + 180) % 360) - 180;
+
+    return (newLat, newLon);
+  }
+
+  private static double DegreesToRadians(double degrees)
+  {
+    return degrees * Math.PI / 180.0;
+  }
+
+  private static double RadiansToDegrees(double radians)
+  {
+    return radians * 180.0 / Math.PI;
   }
 }

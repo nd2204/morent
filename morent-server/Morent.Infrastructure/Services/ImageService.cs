@@ -61,6 +61,7 @@ public class ImageService : IImageService
     // Return successful result
     return Result.Success(new ImageUploadResponse(
         savedImage.Id,
+        savedImage.FileName,
         storageResult.Path,
         _imageStorage.GetImageUrl(storageResult.Path)));
   }

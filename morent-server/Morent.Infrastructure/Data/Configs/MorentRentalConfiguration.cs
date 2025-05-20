@@ -14,7 +14,7 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
       .WithOne()
       .HasForeignKey<MorentPayment>(p => p.RentalId);
 
-    builder.HasOne<MorentCar>()
+    builder.HasOne(p => p.Car)
       .WithMany()
       .HasForeignKey(e => e.CarId)
       .OnDelete(DeleteBehavior.Restrict);
@@ -48,33 +48,21 @@ public class MorentRentalConfiguration : IEntityTypeConfiguration<MorentRental>
       .IsRequired();
     });
 
-    // Configure Location Value Objects
     builder.OwnsOne(r => r.PickupLocation, location =>
     {
-      location.Property(l => l.Country)
-        .HasColumnName("PickupCountry")
-        .HasMaxLength(200)
-        .IsRequired();
-
-      location.Property(l => l.Address)
-        .HasColumnName("PickupAddress");
-
-      location.Property(l => l.City)
-        .HasColumnName("PickupCity");
+      location.Property(l => l.Address).HasColumnName("PickupLocationAddress").IsRequired(false);
+      location.Property(l => l.City).HasColumnName("PickupLocationCity").IsRequired(false);
+      location.Property(l => l.Country).HasColumnName("PickupLocationCountry").IsRequired(false);
+      location.Property(l => l.Longitude).HasColumnName("PickupLocationLongitude");
+      location.Property(l => l.Latitude).HasColumnName("PickupLocationLatitude");
     });
-
     builder.OwnsOne(r => r.DropoffLocation, location =>
     {
-      location.Property(l => l.Country)
-        .HasColumnName("DropoffCountry")
-        .HasMaxLength(200)
-        .IsRequired();
-
-      location.Property(l => l.Address)
-        .HasColumnName("DropoffAddress");
-
-      location.Property(l => l.City)
-        .HasColumnName("DropoffCity");
+      location.Property(l => l.Address).HasColumnName("DropoffLocationAddress").IsRequired(false);
+      location.Property(l => l.City).HasColumnName("DropoffLocationCity").IsRequired(false);
+      location.Property(l => l.Country).HasColumnName("DropoffLocationCountry").IsRequired(false);
+      location.Property(l => l.Longitude).HasColumnName("DropoffLocationLongitude");
+      location.Property(l => l.Latitude).HasColumnName("DropoffLocationLatitude");
     });
   }
 }

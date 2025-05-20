@@ -85,8 +85,12 @@ public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<I
         c => c.CarModel.Gearbox.ToString().ToLower() == filter.Gearbox.ToLower());
 
     if (!string.IsNullOrWhiteSpace(filter.Location))
+    {
       cars = cars.Where(
-        c => c.CurrentLocation.City.Contains(filter.Location));
+        c => !string.IsNullOrWhiteSpace(c.CurrentLocation.City)
+          ? c.CurrentLocation.City.Contains(filter.Location)
+          : true);
+  }
 
     if (filter.MinPrice.HasValue)
       cars = cars.Where(
@@ -117,9 +121,9 @@ public class GetCarsByQueryHandler : IQueryHandler<GetCarsByQuery, PagedResult<I
       }
     }
     else
-    {
-      cars = cars.OrderBy(c => c.CarModel.Brand);
-    }
-    return cars;
+{
+  cars = cars.OrderBy(c => c.CarModel.Brand);
+}
+return cars;
   }
 }

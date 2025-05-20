@@ -154,10 +154,11 @@ namespace Morent.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Method")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("RentalId")
@@ -172,10 +173,36 @@ namespace Morent.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProviderId");
+
                     b.HasIndex("RentalId")
                         .IsUnique();
 
-                    b.ToTable("MorentPayment");
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentPaymentAggregate.PaymentProvider", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("FeePercent")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LogoImageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LogoImageId");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
@@ -308,16 +335,27 @@ namespace Morent.Infrastructure.Migrations
                                 .HasColumnType("TEXT");
 
                             b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LocationAddress");
 
                             b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LocationCity");
 
                             b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("LocationCountry");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("LocationLatitude");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("LocationLongitude");
 
                             b1.HasKey("MorentCarId");
 
@@ -376,6 +414,12 @@ namespace Morent.Infrastructure.Migrations
 
             modelBuilder.Entity("Morent.Core.MorentPaymentAggregate.MorentPayment", b =>
                 {
+                    b.HasOne("Morent.Core.MorentPaymentAggregate.PaymentProvider", "Provider")
+                        .WithMany()
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Morent.Core.MorentRentalAggregate.MorentRental", null)
                         .WithOne()
                         .HasForeignKey("Morent.Core.MorentPaymentAggregate.MorentPayment", "RentalId")
@@ -397,7 +441,7 @@ namespace Morent.Infrastructure.Migrations
 
                             b1.HasKey("MorentPaymentId");
 
-                            b1.ToTable("MorentPayment");
+                            b1.ToTable("Payments");
 
                             b1.WithOwner()
                                 .HasForeignKey("MorentPaymentId");
@@ -405,11 +449,21 @@ namespace Morent.Infrastructure.Migrations
 
                     b.Navigation("PaymentAmount")
                         .IsRequired();
+
+                    b.Navigation("Provider");
+                });
+
+            modelBuilder.Entity("Morent.Core.MorentPaymentAggregate.PaymentProvider", b =>
+                {
+                    b.HasOne("Morent.Core.MediaAggregate.MorentImage", null)
+                        .WithMany()
+                        .HasForeignKey("LogoImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Morent.Core.MorentRentalAggregate.MorentRental", b =>
                 {
-                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", null)
+                    b.HasOne("Morent.Core.MorentCarAggregate.MorentCar", "Car")
                         .WithMany()
                         .HasForeignKey("CarId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -435,20 +489,24 @@ namespace Morent.Infrastructure.Migrations
                                 .HasColumnType("TEXT");
 
                             b1.Property<string>("Address")
-                                .IsRequired()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("DropoffAddress");
+                                .HasColumnName("DropoffLocationAddress");
 
                             b1.Property<string>("City")
-                                .IsRequired()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("DropoffCity");
+                                .HasColumnName("DropoffLocationCity");
 
                             b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasMaxLength(200)
                                 .HasColumnType("TEXT")
-                                .HasColumnName("DropoffCountry");
+                                .HasColumnName("DropoffLocationCountry");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("DropoffLocationLatitude");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("DropoffLocationLongitude");
 
                             b1.HasKey("MorentRentalId");
 
@@ -464,20 +522,24 @@ namespace Morent.Infrastructure.Migrations
                                 .HasColumnType("TEXT");
 
                             b1.Property<string>("Address")
-                                .IsRequired()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupAddress");
+                                .HasColumnName("PickupLocationAddress");
 
                             b1.Property<string>("City")
-                                .IsRequired()
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupCity");
+                                .HasColumnName("PickupLocationCity");
 
                             b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasMaxLength(200)
                                 .HasColumnType("TEXT")
-                                .HasColumnName("PickupCountry");
+                                .HasColumnName("PickupLocationCountry");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupLocationLatitude");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("REAL")
+                                .HasColumnName("PickupLocationLongitude");
 
                             b1.HasKey("MorentRentalId");
 
@@ -528,6 +590,8 @@ namespace Morent.Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("MorentRentalId");
                         });
+
+                    b.Navigation("Car");
 
                     b.Navigation("DropoffLocation")
                         .IsRequired();

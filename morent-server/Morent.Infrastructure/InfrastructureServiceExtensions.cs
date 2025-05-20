@@ -2,9 +2,10 @@ using Morent.Infrastructure.Data;
 using Morent.Infrastructure.Data.Repositories;
 using Morent.Application.Repositories;
 using Morent.Infrastructure.Settings;
-using Morent.Application.Interfaces;
 using Morent.Infrastructure.Services;
 using Ardalis.GuardClauses;
+using Stripe;
+using Morent.Infrastructure.Payment;
 
 namespace Morent.Infrastructure;
 
@@ -33,6 +34,8 @@ public static class InfrastructureServiceExtensions
         RegisterEFRepositories(services);
 
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+        services.Configure<StripeSettings>(configuration.GetSection("Stripe"));
+        StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
 
         services.AddHttpClient();
 
@@ -89,7 +92,6 @@ public static class InfrastructureServiceExtensions
             .AddScoped<ICarRepository, CarRepository>()
             .AddScoped<IRentalRepository, RentalRepository>()
             .AddScoped<IReviewRepository, ReviewRepository>()
-            .AddScoped<IPaymentService, PaymentService>()
             .AddScoped<IUserRepository, UserRepository>()
 
             .AddScoped<IOAuthService, OAuthService>()
@@ -99,6 +101,11 @@ public static class InfrastructureServiceExtensions
             .AddScoped<ICarImageService, CarImageService>()
             .AddScoped<IUserProfileService, UserService>()
             .AddScoped<IUserService, UserService>()
+
+            .AddScoped<IPaymentService, PaymentService>()
+            .AddScoped<IPaymentProvider, StripePaymentProvider>()
+            .AddScoped<IPaymentProvider, MoMoPaymentProvider>()
+            .AddScoped<IPaymentProvider, VNPayPaymentMethod>()
             ;
     }
 }

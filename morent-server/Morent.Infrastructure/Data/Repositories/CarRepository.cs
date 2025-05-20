@@ -15,7 +15,7 @@ public class CarRepository : EFRepository<MorentCar>, ICarRepository
     public async Task<IEnumerable<MorentCar>> GetAvailableCarsAsync(
         DateTime? start,
         DateTime? end,
-        CarLocationDto? nearLocation,
+        LocationDto? nearLocation,
         int? minCapacity = null,
         CancellationToken cancellationToken = default)
     {

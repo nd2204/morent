@@ -7,13 +7,16 @@ global using Morent.Core.MorentReviewAggregate;
 global using Morent.Core.MorentUserAggregate;
 global using Morent.Core.MorentCarAggregate;
 global using Morent.Core.MorentRentalAggregate;
+global using Morent.Core.MorentPaymentAggregate;
 global using Morent.Core.ValueObjects;
 
-global using Morent.Application.Features.Auth.DTOs;
 global using Morent.Application.Features.DTOs;
+global using Morent.Application.Features.Auth.DTOs;
+global using Morent.Application.Features.Payment.DTOs;
 global using Morent.Application.Features.Car.DTOs;
 global using Morent.Application.Features.Rental.DTOs;
 global using Morent.Application.Features.Review.DTOs;
 global using Morent.Application.Features.User.DTOs;
 global using Morent.Application.Interfaces;
 global using Morent.Application.Repositories;
+global using Morent.Application.Extensions;

@@ -36,12 +36,11 @@ public class UpdateCarCommandHandler : ICommandHandler<UpdateCarCommand, Result>
     // Update location if provided
     if (command.Location != null)
     {
-      var newLocationResult = Location.Create(
-          command.Location.Address,
-          command.Location.City,
-          command.Location.Country
-          );
-        
+      var newLocationResult = Location.CreateGeoLocOnly(
+        command.Location.Longitude,
+        command.Location.Latitude
+      );
+
       if (newLocationResult.IsInvalid())
         return Result.Invalid(newLocationResult.ValidationErrors);
 

@@ -224,11 +224,17 @@ public class UserService : IUserService, IUserProfileService
     }
 
     // Create pickup and dropoff locations
-    var pickupLocation = Location.Create(request.PickupLocation.Address, request.PickupLocation.City, request.PickupLocation.Country);
+    var pickupLocation = Location.Create(
+      request.PickupLocation.Address, request.PickupLocation.City, request.PickupLocation.Country,
+      request.PickupLocation.Longitude, request.PickupLocation.Latitude
+      );
     if (pickupLocation.IsInvalid())
       return Result.Invalid(pickupLocation.ValidationErrors);
 
-    var dropoffLocation = Location.Create(request.DropoffLocation.Address, request.DropoffLocation.City, request.DropoffLocation.Country);
+    var dropoffLocation = Location.Create(
+      request.DropoffLocation.Address, request.DropoffLocation.City, request.DropoffLocation.Country,
+      request.DropoffLocation.Longitude, request.DropoffLocation.Latitude
+      );
     if (dropoffLocation.IsInvalid())
       return Result.Invalid(dropoffLocation.ValidationErrors);
 
@@ -247,8 +253,8 @@ public class UserService : IUserService, IUserProfileService
         userId,
         carId,
         rentalPeriod,
-        pickupLocation,
-        dropoffLocation,
+        pickupLocation.Value,
+        dropoffLocation.Value,
         totalCost);
 
     if (rentalResult.IsInvalid())

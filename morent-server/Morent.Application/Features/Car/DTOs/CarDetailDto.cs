@@ -6,5 +6,5 @@ public class CarDetailDto : CarDto
 {
   public required string Description { get; set; } = default!;
   public required List<ReviewDto> Reviews { get; set; } = new();
-  public required CarLocationDto Location { get; set; } = default!;
+  public required LocationDto Location { get; set; } = default!;
 }

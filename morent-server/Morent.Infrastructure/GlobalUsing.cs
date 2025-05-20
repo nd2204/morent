@@ -15,3 +15,5 @@ global using Morent.Core.MorentReviewAggregate;
 global using Morent.Application.Features.DTOs;
 global using Morent.Application.Features.Car.DTOs;
 global using Morent.Application.Features.User.DTOs;
+
+global using Morent.Application.Interfaces;

@@ -4,6 +4,8 @@ namespace Morent.Application.Interfaces;
 
 public interface IPaymentService
 {
-  Task<string> ProcessPaymentAsync(Guid userId, Guid rentalId, Money amount, CancellationToken cancellationToken = default);
-  Task<bool> RefundPaymentAsync(string paymentId, CancellationToken cancellationToken = default);
+  Task<Result<IEnumerable<PaymentMethodDto>>> GetAllProviderDto();
+  Task<Result<PaymentResponse>> ProcessPaymentAsync(PaymentRequest request);
+  Task<Result<PaymentResponse>> VerifyPaymentAsync(string providerId, IDictionary<string, string> callbackData);
+  Task<Result<PaymentResponse>> RefundPaymentAsync(string providerId, string transactionId, decimal amount);
 }

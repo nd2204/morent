@@ -1,6 +1,3 @@
-using System;
-using Morent.Application.Features.Car.DTOs;
-
 namespace Morent.Application.Extensions;
 
 public static class CarMapping
@@ -22,7 +19,7 @@ public static class CarMapping
     return new CarDetailDto
     {
       Id = car.Id,
-      Title =  carTitle,
+      Title = carTitle,
       Description = car.Description ?? "N/a",
       LicensePlate = car.LicensePlate,
       PricePerDay = car.PricePerDay.Amount,
@@ -33,14 +30,8 @@ public static class CarMapping
       Images = car.Images.ToDtoList(),
       CarModel = car.CarModel.ToDto(),
       Reviews = reviewDtos,
-      Location = new CarLocationDto
-      {
-        Address = car.CurrentLocation.Address,
-        City = car.CurrentLocation.City,
-        Country = car.CurrentLocation.Country
-      }
+      Location = car.CurrentLocation.ToDto()
     };
-
   }
 
   public static CarDto ToCarDto(this MorentCar car)
@@ -49,7 +40,7 @@ public static class CarMapping
     double averageRating = reviews.Any()
         ? reviews.Average(r => r.Rating)
         : 0;
-    
+
     string carTitle = $"{car.CarModel.Brand} {car.CarModel.ModelName} {car.CarModel.Year}";
 
     return new CarDto
@@ -98,23 +89,45 @@ public static class CarMapping
     };
   }
 
-  public static CarLocationDto ToDto(this Location location)
+  public static LocationDto ToDto(this Location location)
   {
-    return new CarLocationDto
+    return new LocationDto
     {
-      Address = location.Address,
-      City = location.City,
-      Country = location.Country
+      Address = location.Address!,
+      City = location.City!,
+      Country = location.Country!,
+      Longitude = location.Longitude,
+      Latitude = location.Latitude,
     };
   }
 
-  public static Location ToEntity(this CarLocationDto location)
+  public static CarLocationDto ToCarLocationDto(this MorentCar car)
   {
-    return Location.Create(
+    return new CarLocationDto
+    {
+      CarId = car.Id,
+      Title = GetCarTitle(car),
+      CarModel = car.CarModel.ToDto(),
+      ImageUrl = "",
+      Longitude = car.CurrentLocation.Longitude,
+      Latitude = car.CurrentLocation.Latitude,
+    };
+  }
+
+  public static Location ToEntity(this LocationDto location)
+  {
+    var result = Location.Create(
       address: location.Address,
       city: location.City,
-      country: location.Country
-    ).Value;
+      country: location.Country,
+      longitude: location.Longitude,
+      latitude: location.Latitude
+    );
+
+    if (!result.IsSuccess)
+      throw new Exception("Invalid location");
+
+    return result;
   }
 
   public static CarImageDto ToDto(this MorentCarImage image)
@@ -135,5 +148,10 @@ public static class CarMapping
       carImageDtos.Add(image.ToDto());
     }
     return carImageDtos;
+  }
+
+  private static string GetCarTitle(MorentCar car)
+  {
+    return $"{car.CarModel.Brand} {car.CarModel.ModelName} {car.CarModel.Year}";
   }
 }

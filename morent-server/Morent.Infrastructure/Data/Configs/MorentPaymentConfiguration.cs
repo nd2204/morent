@@ -9,8 +9,11 @@ public class MorentPaymentConfiguration : IEntityTypeConfiguration<MorentPayment
     builder.HasKey(p => p.Id);
     builder.Property(p => p.Status).IsRequired();
     builder.Property(p => p.RentalId).IsRequired();
-    builder.Property(p => p.Method).IsRequired();
     builder.Property(p => p.TransactionId);
+
+    builder.HasOne(p => p.Provider)
+      .WithMany()
+      .IsRequired();
 
     // Configure Money Value Object for Amount
     builder.OwnsOne(r => r.PaymentAmount, r =>
